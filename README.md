@@ -12,6 +12,6 @@ source .venv/Script/activate
 
 --COMANDOS PADRÃO
 
-pip install Flask Flask-SQLAlchemy mysql-connector-python
+pip install Flask Flask-SQLAlchemy mysql-connector-python python-dotenv
 
 python app.py
