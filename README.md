@@ -1,17 +1,37 @@
 # BackEnd_Kora_ITSM
 
---COMANDOS PARA INSTALAR AMBIENTE VIRTUAL EM SISTEMA LINUX/WSL
+## Configuração do Ambiente Virtual
+
+### Linux/WSL
+
+Para configurar o ambiente virtual no Linux ou WSL, siga os passos abaixo:
+
+```bash
 python3 -m venv .venv
-
 source .venv/bin/activate
+```
 
---COMANDOS PARA INSTALAR AMBIENTE VIRTUAL EM SISTEMA WINDOWS
+### Windows
+
+Para configurar o ambiente virtual no Windows, siga os passos abaixo:
+
+```bash
 python -m venv .venv
+source .venv/Scripts/activate
+```
 
-source .venv/Script/activate
+## Instalação das Dependências
 
---COMANDOS PADRÃO
+Após ativar o ambiente virtual, instale as dependências do projeto utilizando o arquivo requirements.txt:
 
-pip install Flask Flask-SQLAlchemy mysql-connector-python python-dotenv
+```bash
+pip install -r requirements.txt
+```
 
+## Executando o Projeto
+
+Para iniciar o servidor Flask, utilize o seguinte comando:
+
+```bash
 python app.py
+```
