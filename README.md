@@ -1,5 +1,31 @@
 # BackEnd_Kora_ITSM
 
+/my_flask_project/
+│
+├── /app/
+│   ├── /models/
+│   │   ├── __init__.py
+│   │   ├── tb_tickets.py
+│   │   └── tb_tickets_tasks.py
+│   │   └── ...
+│   │
+│   ├── /controllers/
+│   │   ├── __init__.py
+│   │   ├── tickets_controller.py
+│   │   └── ...
+│   │
+│   ├── /views/
+│   │   ├── __init__.py
+│   │   └── routes.py
+│   │
+│   ├── __init__.py
+│   └── config.py
+│
+├── run.py
+├── .env
+├── .env.example
+└── requirements.txt
+
 ## Configuração do Ambiente Virtual
 
 ### Linux/WSL
