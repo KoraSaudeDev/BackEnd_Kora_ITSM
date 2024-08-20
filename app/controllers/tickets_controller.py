@@ -230,13 +230,11 @@ def get_ticket():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@tickets_blueprint.route('/ticket_tasks', methods=['GET'])
+@tickets_blueprint.route('/ticket-tasks', methods=['GET'])
 def get_ticket_tasks():
     id = request.args.get('id')
     if not id:
         return jsonify({"error": "ID parameter is required"}), 400
-    
-    print(id)
 
     try:
         tasks = TbTicketsTasks.query.filter_by(cod_fluxo=id).all()
