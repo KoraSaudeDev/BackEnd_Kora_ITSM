@@ -29,6 +29,7 @@
 ├── Dockerfile                    # Dockerfile
 └── requirements.txt              # Dependências do projeto
 ```
+
 ## Configuração do Arquivo de Ambiente
 
 Para configurar as variáveis de ambiente do projeto, siga os passos abaixo:
