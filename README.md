@@ -1,30 +1,32 @@
 # BackEnd_Kora_ITSM
 
+```bash
 /my_flask_project/
 │
 ├── /app/
 │   ├── /models/
-│   │   ├── __init__.py
-│   │   ├── tb_tickets.py
-│   │   └── tb_tickets_tasks.py
-│   │   └── ...
+│   │   ├── __init__.py           # Inicialização do módulo models
+│   │   ├── tb_tickets.py         # Modelo para a tabela TbTickets
+│   │   └── tb_tickets_tasks.py   # Modelo para a tabela TbTicketsTasks
+│   │   └── ...                   # Outros modelos
 │   │
 │   ├── /controllers/
-│   │   ├── __init__.py
-│   │   ├── tickets_controller.py
-│   │   └── ...
+│   │   ├── __init__.py           # Inicialização do módulo controllers
+│   │   ├── tickets_controller.py # Controlador para operações de tickets
+│   │   └── ...                   # Outros controladores
 │   │
 │   ├── /views/
-│   │   ├── __init__.py
-│   │   └── routes.py
+│   │   ├── __init__.py           # Inicialização do módulo views
+│   │   └── routes.py             # Definição das rotas da aplicação
 │   │
-│   ├── __init__.py
-│   └── config.py
+│   ├── __init__.py               # Inicialização do pacote app
+│   └── config.py                 # Configurações da aplicação
 │
-├── run.py
-├── .env
-├── .env.example
-└── requirements.txt
+├── run.py                        # Script para iniciar a aplicação Flask
+├── .env                          # Arquivo de variáveis de ambiente
+├── .env.example                  # Exemplo de arquivo .env
+└── requirements.txt              # Dependências do projeto
+```
 
 ## Configuração do Ambiente Virtual
 
