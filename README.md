@@ -38,10 +38,11 @@ Copie o arquivo .env.example para .env:
 ```bash
 cp .env.example .env
 ```
-
+<br>
 Abra o arquivo .env copiado e configure as variáveis de ambiente conforme necessário. 
-
+<br><br>
 Certifique-se de preencher os valores corretos para cada variável, de acordo com o seu ambiente de desenvolvimento.
+<br>
 
 ## Configuração do Ambiente Virtual
 
