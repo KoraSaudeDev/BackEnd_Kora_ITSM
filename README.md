@@ -25,6 +25,7 @@
 ├── run.py                        # Script para iniciar a aplicação Flask
 ├── .env                          # Arquivo de variáveis de ambiente
 ├── .env.example                  # Exemplo de arquivo .env
+├── docker-compose.yml            # Docker compose
 └── requirements.txt              # Dependências do projeto
 ```
 
