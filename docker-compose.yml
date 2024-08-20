@@ -3,7 +3,7 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
+      - "${FLASK_RUN_PORT}:${FLASK_RUN_PORT}"
     env_file:
       - .env
     volumes:

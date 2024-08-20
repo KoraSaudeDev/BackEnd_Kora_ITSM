@@ -26,8 +26,22 @@
 ├── .env                          # Arquivo de variáveis de ambiente
 ├── .env.example                  # Exemplo de arquivo .env
 ├── docker-compose.yml            # Docker compose
+├── Dockerfile                    # Dockerfile
 └── requirements.txt              # Dependências do projeto
 ```
+## Configuração do Arquivo de Ambiente
+
+Para configurar as variáveis de ambiente do projeto, siga os passos abaixo:
+
+Copie o arquivo .env.example para .env:
+
+```bash
+cp .env.example .env
+```
+
+Abra o arquivo .env copiado e configure as variáveis de ambiente conforme necessário. 
+
+Certifique-se de preencher os valores corretos para cada variável, de acordo com o seu ambiente de desenvolvimento.
 
 ## Configuração do Ambiente Virtual
 
@@ -62,5 +76,5 @@ pip install -r requirements.txt
 Para iniciar o servidor Flask, utilize o seguinte comando:
 
 ```bash
-python app.py
+python run.py
 ```
