@@ -1,4 +1,4 @@
-version: '3'
+version: '3.7'
 services:
   web:
     build: .
@@ -8,3 +8,4 @@ services:
       - .env
     volumes:
       - .:/app
+    command: python run.py
