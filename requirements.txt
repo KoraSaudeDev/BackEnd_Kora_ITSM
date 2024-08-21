@@ -1,4 +1,5 @@
-Flask 
-Flask-SQLAlchemy 
+Flask
+Flask-CORSRS
+Flask-SQLAlchemy
 mysql-connector-python
 python-dotenv
