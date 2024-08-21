@@ -1,5 +1,5 @@
 Flask
-Flask-CORSRS
+Flask-Cors
 Flask-SQLAlchemy
 mysql-connector-python
 python-dotenv
