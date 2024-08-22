@@ -49,7 +49,7 @@ def get_meus_tickets():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@tickets_blueprint.route('/minha-equipe', methods=['GET'])
+@tickets_blueprint.route('/minha-equipe', methods=['POST'])
 def get_minha_equipe():
     data = request.get_json()
     grupos = data.get('grupos', [])
@@ -57,6 +57,7 @@ def get_minha_equipe():
     if not grupos:
         return jsonify({"error": "Grupos parameter is required"}), 400
 
+    cod_fluxo = request.args.get('cod_fluxo', None)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
     
@@ -67,6 +68,9 @@ def get_minha_equipe():
             or_(*like_conditions),
             TbTickets.status.notin_(["Finalizado", "Cancelado"])
         )
+        
+        if cod_fluxo:
+            query = query.filter(TbTickets.cod_fluxo.like(f"%{cod_fluxo}%"))
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
