@@ -156,10 +156,10 @@ def get_ticket():
         return jsonify({"error": "Cod_fluxo parameter is required"}), 400
 
     try:
-        tickets = TbTickets.query.filter_by(cod_fluxo=cod_fluxo).all()
+        ticket = TbTickets.query.filter_by(cod_fluxo=cod_fluxo).first()
 
-        results = [
-            {
+        if ticket:
+            result = {
                 "id": ticket.id,
                 "cod_fluxo": ticket.cod_fluxo,
                 "abertura": ticket.abertura,
@@ -227,10 +227,8 @@ def get_ticket():
                 "resposta_chamado": ticket.resposta_chamado,
                 "cod_change": ticket.cod_change
             }
-            for ticket in tickets
-        ]
 
-        return jsonify(results)
+        return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
