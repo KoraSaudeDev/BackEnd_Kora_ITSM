@@ -7,6 +7,8 @@ from app.models.vw_itsm_assunto import VwItsmAssunto
 from app.models.vw_itsm_sla import VwItsmSla
 from app.models.vw_hub import VwHub
 from app.models.tb_unidade import TbUnidade
+from app.models.vw_usuarios_executores import VwUsuariosExecutores
+from app.models.tb_tickets_tasks_status import TbTicketsTasksStatus
 
 tickets_form_blueprint = Blueprint('tickets_form', __name__)
 
@@ -103,5 +105,27 @@ def get_unidades_by_hub():
         
         return jsonify(result), 200
     
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@tickets_form_blueprint.route('/usuarios-executores', methods=['GET'])
+def get_all_usuarios_executores():
+    try:
+        usuarios = VwUsuariosExecutores.query.order_by(VwUsuariosExecutores.papel_nome.asc()).all()
+        result = [
+            usuario.papel_nome for usuario in usuarios
+        ]
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@tickets_form_blueprint.route('/status', methods=['GET'])
+def get_all_status():
+    try:
+        status = TbTicketsTasksStatus.query.order_by(TbTicketsTasksStatus.st_decricao.asc()).all()
+        result = [
+            stt.st_decricao for stt in status
+        ]
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
