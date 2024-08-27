@@ -3,9 +3,12 @@ from sqlalchemy import or_
 import os
 from os import getenv
 from dotenv import load_dotenv
+import imghdr
+import random
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -16,63 +19,26 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 drive_service = build('drive', 'v3', credentials=credentials)
 
-tickets_files_blueprint = Blueprint('tickets_files_blueprint', __name__)
+UPLOAD_FOLDER = getenv('UPLOAD_FOLDER_LOCAL')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
-@tickets_files_blueprint.route('/upload', methods=['GET'])
-def upload_file():
-    path_local = request.args.get('path_local')
-    if not path_local:
-        return jsonify({"error": "Path_local parameter is required"}), 400
-    
-    if not os.path.exists(path_local):
-        return jsonify({"error": f"File not found: {path_local}"}), 404
-    
-    name = request.args.get('name')
-    if not name:
-        return jsonify({"error": "Name parameter is required"}), 400
-    
-    path_google = request.args.get('path_google')
-    if not path_google:
-        return jsonify({"error": "Path_google parameter is required"}), 400
-    
-    destination_folder_id = get_id_from_path(TICKETS_FOLDER_ID, path_google)
-    
-    if not destination_folder_id:
-        return jsonify({"error": f"Destination folder not found -> {path_google}"}), 404
-    
-    file_metadata = {
-        'name': name,
-        'parents': [destination_folder_id]
+GDRIVE_FOLDERS = {
+    1: {
+        "files": "tb_tickets_Files_", 
+        "images": "tb_tickets_Images"
+    },
+    2: {
+        "files": "tb_tickets_tasks_Files_", 
+        "images": "tb_tickets_tasks_Images"
+    },
+    3: {
+        "files": "tb_tickets_files_Files_", 
+        "images": "tb_tickets_files_Images"
     }
-    
-    media = MediaFileUpload(path_local, resumable=True)
-    file = drive_service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields='id'
-    ).execute()
-    
-    return file.get('id')
+}
 
-@tickets_files_blueprint.route('/open-url', methods=['GET'])
-def get_open_url():
-    path = request.args.get('path')
-    if not path:
-        return jsonify({"error": "Path parameter is required"}), 400
-    
-    file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
-    
-    return f"https://drive.google.com/file/d/{file_id}/preview"
-
-@tickets_files_blueprint.route('/download-url', methods=['GET'])
-def get_download_url():
-    path = request.args.get('path')
-    if not path:
-        return jsonify({"error": "Path parameter is required"}), 400
-    
-    file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
-    
-    return f"https://drive.google.com/uc?id={file_id}&export=download"
+tickets_files_blueprint = Blueprint('tickets_files_blueprint', __name__)
 
 def get_id_from_path(folder_id, file_path):
     parts = file_path.split('/')
@@ -99,3 +65,94 @@ def get_id_from_path(folder_id, file_path):
         return None
     else:
         return items[0]['id']
+
+def upload_file_gdrive(path_local, name, path_google):
+    if not path_local:
+        return jsonify({"error": "Path_local parameter is required"}), 400
+    
+    if not os.path.exists(path_local):
+        return jsonify({"error": f"File not found: {path_local}"}), 404
+    
+    if not name:
+        return jsonify({"error": "Name parameter is required"}), 400
+    
+    if not path_google:
+        return jsonify({"error": "Path_google parameter is required"}), 400
+    
+    destination_folder_id = get_id_from_path(TICKETS_FOLDER_ID, path_google)
+    
+    if not destination_folder_id:
+        return jsonify({"error": f"Destination folder not found -> {path_google}"}), 404
+    
+    file_metadata = {
+        'name': name,
+        'parents': [destination_folder_id]
+    }
+    
+    media = MediaFileUpload(path_local, resumable=True)
+    file = drive_service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields='id'
+    ).execute()
+    
+    return file.get('id')
+
+@tickets_files_blueprint.route('/upload', methods=['POST'])
+def upload_file_local():
+    if 'file' not in request.files:
+        return jsonify({'error': 'Nenhum arquivo foi enviado'}), 400
+
+    file = request.files['file']
+    upload_type = request.form.get('uploadType')
+
+    if file.filename == '':
+        return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
+
+    if not upload_type:
+        return jsonify({'error': 'uploadType não fornecido'}), 400
+
+    upload_type = int(upload_type)
+    
+    random_prefix = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+    filename = secure_filename(file.filename)
+    new_filename = f"{random_prefix}_{filename}"
+
+    file_path = os.path.join(UPLOAD_FOLDER, new_filename)
+    file.save(file_path)
+
+    is_image = imghdr.what(file_path)
+
+    if is_image:
+        gdrive_folder = GDRIVE_FOLDERS[upload_type]["images"]
+    else:
+        gdrive_folder = GDRIVE_FOLDERS[upload_type]["files"]
+
+    gdrive_file_id = upload_file_gdrive(path_local=file_path, name=new_filename, path_google=gdrive_folder)
+    
+    os.remove(file_path)
+
+    if isinstance(gdrive_file_id, str):
+        return f"{gdrive_folder}/{new_filename}"
+    else:
+        return gdrive_file_id
+
+@tickets_files_blueprint.route('/open-url', methods=['GET'])
+def get_open_url():
+    path = request.args.get('path')
+    if not path:
+        return jsonify({"error": "Path parameter is required"}), 400
+    
+    file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
+    
+    return f"https://drive.google.com/file/d/{file_id}/preview"
+
+@tickets_files_blueprint.route('/download-url', methods=['GET'])
+def get_download_url():
+    path = request.args.get('path')
+    if not path:
+        return jsonify({"error": "Path parameter is required"}), 400
+    
+    file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
+    
+    return f"https://drive.google.com/uc?id={file_id}&export=download"

@@ -48,7 +48,7 @@ def get_meus_tickets():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 @tickets_blueprint.route('/minha-equipe', methods=['POST'])
 def get_minha_equipe():
     data = request.get_json()
@@ -103,7 +103,7 @@ def get_minha_equipe():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
 @tickets_blueprint.route('/tickets-preview', methods=['GET'])
 def get_tickets_preview():
     cod_fluxo = request.args.get('id')
@@ -185,6 +185,7 @@ def get_ticket():
                 "subcategoria": ticket.subcategoria,
                 "assunto": ticket.assunto,
                 "descricao": ticket.descricao,
+                "anexo": ticket.anexo,
                 "novo_usuario": ticket.novo_usuario,
                 "primeiro_nome_user": ticket.primeiro_nome_user,
                 "sobrenome_user": ticket.sobrenome_user,
@@ -225,6 +226,7 @@ def get_ticket():
                 "ds_endereco": ticket.ds_endereco,
                 "ds_obs": ticket.ds_obs,
                 "resposta_chamado": ticket.resposta_chamado,
+                "anexo_resposta": ticket.anexo_resposta,
                 "cod_change": ticket.cod_change
             }
 
