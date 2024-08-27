@@ -62,7 +62,7 @@ def get_open_url():
     
     file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
     
-    return f"https://drive.google.com/file/d/{file_id}/view"
+    return f"https://drive.google.com/file/d/{file_id}/preview"
 
 @tickets_files_blueprint.route('/download-url', methods=['GET'])
 def get_download_url():
