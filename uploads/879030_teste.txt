@@ -1,0 +1,199 @@
+const handleSalvarTicket = async () => {
+        if (!selectedHub || !selectedUnidade || !selectedCategoria || !selectedSubcategoria || !selectedAssunto || !prioridadeSelecionada) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        function toTitleCase(str) {
+            if (str === "EM ATENDIMENTO") return "Em Andamento";
+            return str
+                .toLowerCase()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        showLoadingOverlay();
+
+        const update_tasks = atividades
+            .filter(task => task.alterar === 1 && task.id !== undefined)
+            .map(task => ({
+                cod_task: task.cod_task,
+                ds_concluido_por: task.ds_concluido_por,
+                dt_fim: task.dt_fim,
+            }));
+
+        const insert_tasks = atividades.filter(task => task.alterar === 1 && task.id === undefined);
+
+        const ultimoItem = atividades[atividades.length - 1];
+
+        const update_tickets = {
+            hub: selectedHub,
+            unidade: selectedUnidade,
+            categoria: selectedCategoria,
+            subcategoria: selectedSubcategoria,
+            assunto: selectedAssunto,
+            ds_nivel: prioridadeSelecionada,
+            status: toTitleCase(ultimoItem.status),
+            grupo: ultimoItem.executor,
+            sla: prioridades.find(line => line.prioridade === prioridadeSelecionada)?.sla
+        };
+
+        if (update_tickets.status === "Finalizado") {
+            update_tickets.finalizado_por = ultimoItem.aberto_por;
+            update_tickets.data_fim = ultimoItem.aberto_em;
+            update_tickets.bl_reabertura = 1;
+        }
+
+        const sendRequest = async (config) => {
+            try {
+                const response = await axios.request(config);
+                console.log(JSON.stringify(response.data));
+            } catch (error) {
+                console.error('Request Error:', error);
+            }
+        };
+
+        try {
+            for (let i = 0; i < selectedFiles.length; i++) {
+                const formData = new FormData();
+                formData.append('file', selectedFiles[i].file);
+                formData.append('uploadType', selectedFiles[i].uploadType);
+
+                const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/tickets/file/upload`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                });
+
+                if (response.status === 200) {
+                    if (selectedFiles[i].uploadType === 1) {
+                        update_tickets.anexo_resposta = response?.data
+                    }
+                    else if (selectedFiles[i].uploadType === 2) {
+                        const matchedAtividade = insert_tasks.find(task => task.ds_anexo === selectedFiles[i].file.name);
+                        if (matchedAtividade) {
+                            matchedAtividade.ds_anexo = response?.data;
+                        }
+                    }
+                } else {
+                    console.error(`Erro ao enviar o arquivo ${selectedFiles[i].name}:`, response);
+                }
+            }
+
+            const ticketConfig = {
+                method: 'patch',
+                url: `${process.env.REACT_APP_API_BASE_URL}/tickets/update/${data.cod_fluxo}`,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify(update_tickets)
+            };
+
+            await sendRequest(ticketConfig);
+
+            for (const task of update_tasks) {
+                const taskConfig = {
+                    method: 'patch',
+                    url: `${process.env.REACT_APP_API_BASE_URL}/tickets/update/task/${task.cod_task}`,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(task)
+                };
+
+                await sendRequest(taskConfig);
+            }
+
+            for (const task of insert_tasks) {
+                delete task.alterar;
+
+                const taskConfig = {
+                    method: 'post',
+                    url: `${process.env.REACT_APP_API_BASE_URL}/tickets/update/task`,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify(task)
+                };
+
+                await sendRequest(taskConfig);
+            }
+
+            hideLoadingOverlay();
+
+            setShowSuccessMessage(true);
+            setTimeout(() => {
+                setShowSuccessMessage(false);
+                window.location.reload();
+            }, 3000);
+
+        } catch (error) {
+            hideLoadingOverlay();
+            console.error("Error saving ticket and tasks:", error);
+        }
+    };
+
+------------------------------------------------------------------------------------------------------------------------
+
+const handleSalvarAtividade = () => {
+        const aberto_em = document.querySelector('#inicio-task').value;
+        const aberto_por = document.querySelector('#aberto-por-task').value;
+        const descricao = document.querySelector('#descricao-task').value.trim();
+        const executor = document.querySelector('#executor-task').value;
+        const status = document.querySelector('#status-task').value;
+        const tipo_atividade = document.querySelector('input[name="visibilidade"]:checked');
+
+        if (!descricao || !status || !executor || !tipo_atividade) {
+            alert("Por favor, preencha todos os campos obrigatórios.");
+            return;
+        }
+
+        const novaAtividade = {
+            cod_fluxo: data.id,
+            alterar: 1,
+            aberto_em,
+            aberto_por,
+            status,
+            descricao,
+            executor,
+            tipo_atividade: tipo_atividade?.value,
+            ds_anexo: null
+        };
+
+        const fileInput = document.getElementById('anexoAtividade');
+        const files = fileInput.files;
+
+        if (files.length > 0) {
+            novaAtividade.ds_anexo = files[0].name;
+
+            const updatedFiles = Array.from(files).map((file) => ({
+                file,
+                uploadType: 2,
+            }));
+
+            setSelectedFiles((prevFiles) => [...prevFiles, ...updatedFiles]);
+        }
+
+        if (atividades.length > 0) {
+            const ultimaAtividadeIndex = atividades.length - 1;
+            const ultimaAtividade = atividades[ultimaAtividadeIndex];
+
+            ultimaAtividade.alterar = 1;
+
+            if (!ultimaAtividade.dt_fim) {
+                ultimaAtividade.dt_fim = inicio;
+            }
+            if (!ultimaAtividade.ds_concluido_por) {
+                ultimaAtividade.ds_concluido_por = aberto_por;
+            }
+
+            const updatedAtividades = [...atividades];
+            updatedAtividades[ultimaAtividadeIndex] = ultimaAtividade;
+
+            setAtividades(updatedAtividades);
+        }
+
+        setAtividades([...atividades, novaAtividade]);
+        handleFecharAtividadesModal();
+    };

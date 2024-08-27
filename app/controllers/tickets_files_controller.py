@@ -5,6 +5,7 @@ from os import getenv
 from dotenv import load_dotenv
 import imghdr
 import random
+import threading
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -41,118 +42,142 @@ GDRIVE_FOLDERS = {
 tickets_files_blueprint = Blueprint('tickets_files_blueprint', __name__)
 
 def get_id_from_path(folder_id, file_path):
-    parts = file_path.split('/')
-    current_folder_id = folder_id
+    try:
+        parts = file_path.split('/')
+        current_folder_id = folder_id
 
-    for part in parts[:-1]:
-        query = f"'{current_folder_id}' in parents and name = '{part}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+        for part in parts[:-1]:
+            query = f"'{current_folder_id}' in parents and name = '{part}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            results = drive_service.files().list(q=query, fields="files(id, name)").execute()
+            items = results.get('files', [])
+            
+            if not items:
+                print(f"Subpasta '{part}' não encontrada.")
+                return None
+            else:
+                current_folder_id = items[0]['id']
+
+        file_name = parts[-1]
+        query = f"'{current_folder_id}' in parents and name = '{file_name}' and trashed = false"
         results = drive_service.files().list(q=query, fields="files(id, name)").execute()
         items = results.get('files', [])
         
         if not items:
-            print(f"Subpasta '{part}' não encontrada.")
+            print('Arquivo não encontrado.')
             return None
         else:
-            current_folder_id = items[0]['id']
-
-    file_name = parts[-1]
-    query = f"'{current_folder_id}' in parents and name = '{file_name}' and trashed = false"
-    results = drive_service.files().list(q=query, fields="files(id, name)").execute()
-    items = results.get('files', [])
-    
-    if not items:
-        print('Arquivo não encontrado.')
+            return items[0]['id']
+    except Exception as e:
+        print(f"Erro ao obter o ID do arquivo: {str(e)}")
         return None
-    else:
-        return items[0]['id']
 
 def upload_file_gdrive(path_local, name, path_google):
-    if not path_local:
-        return jsonify({"error": "Path_local parameter is required"}), 400
-    
-    if not os.path.exists(path_local):
-        return jsonify({"error": f"File not found: {path_local}"}), 404
-    
-    if not name:
-        return jsonify({"error": "Name parameter is required"}), 400
-    
-    if not path_google:
-        return jsonify({"error": "Path_google parameter is required"}), 400
-    
-    destination_folder_id = get_id_from_path(TICKETS_FOLDER_ID, path_google)
-    
-    if not destination_folder_id:
-        return jsonify({"error": f"Destination folder not found -> {path_google}"}), 404
-    
-    file_metadata = {
-        'name': name,
-        'parents': [destination_folder_id]
-    }
-    
-    media = MediaFileUpload(path_local, resumable=True)
-    file = drive_service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields='id'
-    ).execute()
-    
-    return file.get('id')
+    try:
+        
+        if not os.path.exists(path_local):
+            return jsonify({"error": f"File not found: {path_local}"})
+        
+        destination_folder_id = get_id_from_path(TICKETS_FOLDER_ID, path_google)
+        
+        if not destination_folder_id:
+            return jsonify({"error": f"Destination folder not found -> {path_google}"})
+        
+        file_metadata = {
+            'name': name,
+            'parents': [destination_folder_id]
+        }
+        
+        media = MediaFileUpload(path_local, resumable=True)
+        file = drive_service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+        
+        return file.get('id')
+    except Exception as e:
+        return jsonify({"error": "An error occurred during file upload", "details": str(e)})
+
+def async_upload(file_path, new_filename, gdrive_folder):
+    try:
+        gdrive_file_id = upload_file_gdrive(path_local=file_path, name=new_filename, path_google=gdrive_folder)
+
+        if isinstance(gdrive_file_id, str):
+            print(f"Arquivo inserido no Google Drive: {gdrive_file_id}")
+            os.remove(file_path)
+        else:
+            print("Failed to upload file to Google Drive.")
+    except Exception as e:
+        print(f"An error occurred while uploading the file: {e}")
 
 @tickets_files_blueprint.route('/upload', methods=['POST'])
 def upload_file_local():
-    if 'file' not in request.files:
-        return jsonify({'error': 'Nenhum arquivo foi enviado'}), 400
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'Nenhum arquivo foi enviado'}), 400
 
-    file = request.files['file']
-    upload_type = request.form.get('uploadType')
+        file = request.files['file']
+        upload_type = request.form.get('uploadType')
 
-    if file.filename == '':
-        return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
+        if file.filename == '':
+            return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
 
-    if not upload_type:
-        return jsonify({'error': 'uploadType não fornecido'}), 400
+        if not upload_type:
+            return jsonify({'error': 'uploadType não fornecido'}), 400
 
-    upload_type = int(upload_type)
-    
-    random_prefix = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-    filename = secure_filename(file.filename)
-    new_filename = f"{random_prefix}_{filename}"
+        upload_type = int(upload_type)
+        
+        random_prefix = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        filename = secure_filename(file.filename)
+        new_filename = f"{random_prefix}_{filename}"
 
-    file_path = os.path.join(UPLOAD_FOLDER, new_filename)
-    file.save(file_path)
+        file_path = os.path.join(UPLOAD_FOLDER, new_filename)
+        file.save(file_path)
+        
+        is_image = imghdr.what(file_path)
 
-    is_image = imghdr.what(file_path)
+        if is_image:
+            gdrive_folder = GDRIVE_FOLDERS[upload_type]["images"]
+        else:
+            gdrive_folder = GDRIVE_FOLDERS[upload_type]["files"]
+        
+        response = jsonify({'message': 'Upload iniciado com sucesso!', 'filename': f"{gdrive_folder}/{new_filename}"})
+        response.status_code = 202
 
-    if is_image:
-        gdrive_folder = GDRIVE_FOLDERS[upload_type]["images"]
-    else:
-        gdrive_folder = GDRIVE_FOLDERS[upload_type]["files"]
+        threading.Thread(target=async_upload, args=(file_path, new_filename, gdrive_folder)).start()
 
-    gdrive_file_id = upload_file_gdrive(path_local=file_path, name=new_filename, path_google=gdrive_folder)
-    
-    os.remove(file_path)
-
-    if isinstance(gdrive_file_id, str):
-        return f"{gdrive_folder}/{new_filename}"
-    else:
-        return gdrive_file_id
+        return response
+    except Exception as e:
+        return jsonify({"error": "An error occurred while processing the upload", "details": str(e)}), 500
 
 @tickets_files_blueprint.route('/open-url', methods=['GET'])
 def get_open_url():
-    path = request.args.get('path')
-    if not path:
-        return jsonify({"error": "Path parameter is required"}), 400
-    
-    file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
-    
-    return f"https://drive.google.com/file/d/{file_id}/preview"
+    try:
+        path = request.args.get('path')
+        if not path:
+            return jsonify({"error": "Path parameter is required"}), 400
+        
+        file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
+        if not file_id:
+            return jsonify({"error": "File not found"}), 404
+        
+        return f"https://drive.google.com/file/d/{file_id}/preview"
+
+    except Exception as e:
+        return jsonify({"error": "An error occurred while processing your request", "details": str(e)}), 500
 
 @tickets_files_blueprint.route('/download-url', methods=['GET'])
 def get_download_url():
-    path = request.args.get('path')
-    if not path:
-        return jsonify({"error": "Path parameter is required"}), 400
-    
-    file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
-    
-    return f"https://drive.google.com/uc?id={file_id}&export=download"
+    try:
+        path = request.args.get('path')
+        if not path:
+            return jsonify({"error": "Path parameter is required"}), 400
+        
+        file_id = get_id_from_path(TICKETS_FOLDER_ID, path)
+        if not file_id:
+            return jsonify({"error": "File not found"}), 404
+        
+        return f"https://drive.google.com/uc?id={file_id}&export=download"
+
+    except Exception as e:
+        return jsonify({"error": "An error occurred while processing your request", "details": str(e)}), 500
