@@ -1,8 +1,11 @@
 import uuid
 from flask import Blueprint, jsonify, request
+import requests
+import json
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.tb_tickets import TbTickets
 from app.models.tb_tickets_tasks import TbTicketsTasks
+from app.models.tb_tickets_files import TbTicketsFiles
 from app import db
 
 tickets_update_blueprint = Blueprint('tickets_update', __name__)
@@ -57,7 +60,33 @@ def update_task(cod_task):
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-    
+
+@tickets_update_blueprint.route('/sla', methods=['POST'])
+def update_sla_status():
+    cod_fluxo = request.args.get('cod_fluxo')
+
+    if not cod_fluxo:
+        return jsonify({"error": "Cod_fluxo parameter is required"}), 400
+
+    try:
+        url = "https://kora-api-gxb53d5kyq-rj.a.run.app/sla"
+
+        payload = json.dumps({
+            "cod_fluxo": cod_fluxo,
+            "N° Ticket": cod_fluxo
+        })
+        headers = {
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(url, headers=headers, data=payload).json()
+        
+        return jsonify(response)
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 @tickets_update_blueprint.route('/task', methods=['POST'])
 def create_task():
     data = request.json
@@ -75,6 +104,28 @@ def create_task():
         db.session.commit()
 
         return jsonify({"message": "Task created successfully", "task_id": new_task.cod_task}), 201
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@tickets_update_blueprint.route('/file', methods=['POST'])
+def create_file():
+    data = request.json
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        if 'id' not in data or not data['id']:
+            data['id'] = str(uuid.uuid4())
+
+        new_file = TbTicketsFiles(**data)
+
+        db.session.add(new_file)
+        db.session.commit()
+
+        return jsonify({"message": "File created successfully", "anexo_id": new_file.cod_anexo}), 201
 
     except SQLAlchemyError as e:
         db.session.rollback()

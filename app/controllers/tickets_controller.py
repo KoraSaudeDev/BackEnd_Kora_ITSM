@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import or_
 from app.models.tb_tickets import TbTickets
 from app.models.tb_tickets_tasks import TbTicketsTasks
+from app.models.tb_tickets_files import TbTicketsFiles
 
 tickets_blueprint = Blueprint('tickets', __name__)
 
@@ -243,9 +244,6 @@ def get_ticket_tasks():
     try:
         tasks = TbTicketsTasks.query.filter_by(cod_fluxo=id).all()
 
-        if not tasks:
-            return jsonify({"error": "No task found with the given ID"}), 404
-
         result = [
             {
                 "id": task.id,
@@ -271,6 +269,31 @@ def get_ticket_tasks():
                 "tipo_atividade": task.tipo_atividade
             }
             for task in tasks
+        ]
+
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@tickets_blueprint.route('/ticket-files', methods=['GET'])
+def get_ticket_files():
+    id = request.args.get('id')
+    if not id:
+        return jsonify({"error": "ID parameter is required"}), 400
+
+    try:
+        files = TbTicketsFiles.query.filter_by(cod_fluxo=id).all()
+
+        result = [
+            {
+                "id": file.id,
+                "cod_anexo": file.cod_anexo,
+                "cod_fluxo": file.cod_fluxo,
+                "ds_texto": file.ds_texto,
+                "ds_anexo": file.ds_anexo,
+                "ds_adicionado_por": file.ds_adicionado_por
+            }
+            for file in files
         ]
 
         return jsonify(result)
