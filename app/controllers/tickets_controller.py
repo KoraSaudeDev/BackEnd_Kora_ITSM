@@ -291,7 +291,8 @@ def get_ticket_files():
                 "cod_fluxo": file.cod_fluxo,
                 "ds_texto": file.ds_texto,
                 "ds_anexo": file.ds_anexo,
-                "ds_adicionado_por": file.ds_adicionado_por
+                "ds_adicionado_por": file.ds_adicionado_por,
+                "abertura": file.abertura
             }
             for file in files
         ]

@@ -9,3 +9,4 @@ class TbTicketsFiles(db.Model):
     ds_texto = db.Column(db.Text, nullable=True)
     ds_anexo = db.Column(db.String(600), nullable=True)
     ds_adicionado_por = db.Column(db.String(255), nullable=True)
+    abertura = db.Column(db.DateTime, nullable=True)
