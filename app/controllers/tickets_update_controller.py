@@ -84,7 +84,6 @@ def update_sla_status():
         return jsonify(response)
 
     except SQLAlchemyError as e:
-        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/task', methods=['POST'])
@@ -129,4 +128,23 @@ def create_file():
 
     except SQLAlchemyError as e:
         db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+     
+@tickets_update_blueprint.route('/create-user-google', methods=['POST'])
+def create_google_user():
+    data = request.json
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        url = "https://kora-api-gxb53d5kyq-rj.a.run.app/create"
+        
+        headers = {}
+
+        response = requests.post(url, headers=headers, data=data).json()
+        
+        return jsonify(response)
+
+    except SQLAlchemyError as e:
         return jsonify({"error": str(e)}), 500
