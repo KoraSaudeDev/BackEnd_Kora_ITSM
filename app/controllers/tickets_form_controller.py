@@ -9,6 +9,7 @@ from app.models.vw_hub import VwHub
 from app.models.tb_unidade import TbUnidade
 from app.models.vw_usuarios_executores import VwUsuariosExecutores
 from app.models.tb_tickets_tasks_status import TbTicketsTasksStatus
+from app.models.vw_dominios_email import VwDominiosEmail
 
 tickets_form_blueprint = Blueprint('tickets_form', __name__)
 
@@ -126,6 +127,21 @@ def get_all_status():
         status = TbTicketsTasksStatus.query.order_by(TbTicketsTasksStatus.st_decricao.asc()).all()
         result = [
             stt.st_decricao for stt in status
+        ]
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@tickets_form_blueprint.route('/dominios-email', methods=['GET'])
+def get_all_dominios_email():
+    try:
+        dominios = VwDominiosEmail.query.all()
+        result = [
+            {
+                "dominio": dominio.dominio,
+                "organizacao": dominio.organizacao
+            }
+            for dominio in dominios
         ]
         return jsonify(result), 200
     except Exception as e:

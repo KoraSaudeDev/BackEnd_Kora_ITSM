@@ -173,6 +173,7 @@ def get_ticket():
                 "st_sla_corrido": ticket.st_sla_corrido,
                 "ds_nivel": ticket.ds_nivel,
                 "grupo": ticket.grupo,
+                "executor": ticket.executor,
                 "nome": ticket.nome,
                 "matricula": ticket.matricula,
                 "telefone": ticket.telefone,
@@ -209,6 +210,7 @@ def get_ticket():
                 "cod_prest_mv": ticket.cod_prest_mv,
                 "tipo_usuario": ticket.tipo_usuario,
                 "ds_vinc_empr": ticket.ds_vinc_empr,
+                "empresa_colab_cadastrado": ticket.empresa_colab_cadastrado,
                 "sigla_cp": ticket.sigla_cp,
                 "registro_cp": ticket.registro_cp,
                 "ds_tipo_cargo": ticket.ds_tipo_cargo,
@@ -224,11 +226,26 @@ def get_ticket():
                 "public_alvo": ticket.public_alvo,
                 "obj_comunicacao": ticket.obj_comunicacao,
                 "n_verba": ticket.n_verba,
+                "material_referencia": ticket.material_referencia,
+                "urgencia": ticket.urgencia,
                 "ds_endereco": ticket.ds_endereco,
+                "email_receb_alias": ticket.email_receb_alias,
+                "endereco_alias": ticket.endereco_alias,
                 "ds_obs": ticket.ds_obs,
                 "resposta_chamado": ticket.resposta_chamado,
                 "anexo_resposta": ticket.anexo_resposta,
-                "cod_change": ticket.cod_change
+                "cod_change": ticket.cod_change,
+                "ctrl_criacao_usuario": ticket.ctrl_criacao_usuario,
+                "cod_empresa": ticket.cod_empresa,
+                "telefone_empresa": ticket.telefone_empresa,
+                "Endereco": ticket.Endereco,
+                "Site": ticket.Site,
+                "Pais": ticket.Pais,
+                "CEP": ticket.CEP,
+                "Estado": ticket.Estado,
+                "Cidade": ticket.Cidade,
+                "Logon_Script": ticket.Logon_Script,
+                "Nome_Empresa": ticket.Nome_Empresa
             }
 
         return jsonify(result)
