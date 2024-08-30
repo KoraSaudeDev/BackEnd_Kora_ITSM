@@ -7,9 +7,9 @@ from app.models.vw_itsm_assunto import VwItsmAssunto
 from app.models.vw_itsm_sla import VwItsmSla
 from app.models.vw_hub import VwHub
 from app.models.tb_unidade import TbUnidade
-from app.models.vw_usuarios_executores import VwUsuariosExecutores
 from app.models.tb_tickets_tasks_status import TbTicketsTasksStatus
 from app.models.vw_dominios_email import VwDominiosEmail
+from app.models.vw_itsm_destinatarios import VwItsmDestinatarios
 
 tickets_form_blueprint = Blueprint('tickets_form', __name__)
 
@@ -113,9 +113,13 @@ def get_unidades_by_hub():
 @tickets_form_blueprint.route('/usuarios-executores', methods=['GET'])
 def get_all_usuarios_executores():
     try:
-        usuarios = VwUsuariosExecutores.query.order_by(VwUsuariosExecutores.papel_nome.asc()).all()
+        filas = VwItsmDestinatarios.query.order_by(VwItsmDestinatarios.nome.asc()).all()
         result = [
-            usuario.papel_nome for usuario in usuarios
+            {
+                "id": fila.id,
+                "fila": fila.nome    
+            }
+            for fila in filas
         ]
         return jsonify(result), 200
     except Exception as e:
