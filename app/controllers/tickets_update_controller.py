@@ -69,7 +69,7 @@ def update_sla_status():
         return jsonify({"error": "Cod_fluxo parameter is required"}), 400
 
     try:
-        url = "https://kora-api-gxb53d5kyq-rj.a.run.app/sla"
+        url = "https://kora-api-homolog-f5g5wbjwlq-rj.a.run.app/sla"
 
         payload = json.dumps({
             "cod_fluxo": cod_fluxo,
@@ -138,7 +138,7 @@ def create_google_user():
         return jsonify({"error": "No data provided"}), 400
 
     try:
-        url = "https://kora-api-gxb53d5kyq-rj.a.run.app/create"
+        url = "https://kora-api-homolog-f5g5wbjwlq-rj.a.run.app/create"
         
         headers = {}
 
