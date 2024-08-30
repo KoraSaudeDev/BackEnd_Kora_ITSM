@@ -14,7 +14,7 @@ def get_minhas_filas():
     try:
         user = TbUsersNew.query.filter_by(ds_email=email).first()
         if not user:
-            return jsonify({"error": "User not found"}), 404
+            return jsonify({})
 
         filas = VwItsmFilasUsuarios.query.filter_by(id_user=user.id).all()
 
