@@ -2,11 +2,16 @@ import uuid
 from flask import Blueprint, jsonify, request
 import requests
 import json
+from os import getenv
+from dotenv import load_dotenv
 from sqlalchemy.exc import SQLAlchemyError
 from app.models.tb_tickets import TbTickets
 from app.models.tb_tickets_tasks import TbTicketsTasks
 from app.models.tb_tickets_files import TbTicketsFiles
+from app.models.tb_itsm_log import TbItsmLog
 from app import db
+
+load_dotenv()
 
 tickets_update_blueprint = Blueprint('tickets_update', __name__)
 
@@ -69,7 +74,7 @@ def update_sla_status():
         return jsonify({"error": "Cod_fluxo parameter is required"}), 400
 
     try:
-        url = "https://kora-api-homolog-f5g5wbjwlq-rj.a.run.app/sla"
+        url = f"{getenv('URL_GCP_KORA_API')}/sla"
 
         payload = json.dumps({
             "cod_fluxo": cod_fluxo,
@@ -129,7 +134,7 @@ def create_file():
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-     
+
 @tickets_update_blueprint.route('/create-user-google', methods=['POST'])
 def create_google_user():
     data = request.json
@@ -138,7 +143,7 @@ def create_google_user():
         return jsonify({"error": "No data provided"}), 400
 
     try:
-        url = "https://kora-api-homolog-f5g5wbjwlq-rj.a.run.app/create"
+        url = f"{getenv('URL_GCP_KORA_API')}/create"
         
         headers = {}
 
@@ -147,4 +152,23 @@ def create_google_user():
         return jsonify(response)
 
     except SQLAlchemyError as e:
+        return jsonify({"error": str(e)}), 500
+
+@tickets_update_blueprint.route('/log', methods=['POST'])
+def create_log():
+    data = request.json
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        new_log = TbItsmLog(**data)
+
+        db.session.add(new_log)
+        db.session.commit()
+
+        return jsonify({"message": "Log created successfully"}), 201
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500

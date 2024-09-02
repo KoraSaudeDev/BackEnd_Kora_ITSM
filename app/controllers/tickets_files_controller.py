@@ -12,6 +12,7 @@ from googleapiclient.http import MediaFileUpload
 from werkzeug.utils import secure_filename
 
 load_dotenv()
+file_lock = threading.Lock()
 
 TICKETS_FOLDER_ID = getenv('FOLDER_ANEXOS_TICKETS_ID')
 SERVICE_ACCOUNT_FILE = getenv('SERVICE_ACCOUNT_FILE')
@@ -73,14 +74,13 @@ def get_id_from_path(folder_id, file_path):
 
 def upload_file_gdrive(path_local, name, path_google):
     try:
-        
         if not os.path.exists(path_local):
-            return jsonify({"error": f"File not found: {path_local}"})
+            return {"error": f"File not found: {path_local}"}
         
         destination_folder_id = get_id_from_path(TICKETS_FOLDER_ID, path_google)
         
         if not destination_folder_id:
-            return jsonify({"error": f"Destination folder not found -> {path_google}"})
+            return {"error": f"Destination folder not found -> {path_google}"}
         
         file_metadata = {
             'name': name,
@@ -94,19 +94,24 @@ def upload_file_gdrive(path_local, name, path_google):
             fields='id'
         ).execute()
         
-        return file.get('id')
+        return {"id": file.get('id')}
     except Exception as e:
-        return jsonify({"error": "An error occurred during file upload", "details": str(e)})
+        return {"error": "An error occurred during file upload", "details": str(e)}
 
 def async_upload(file_path, new_filename, gdrive_folder):
     try:
-        gdrive_file_id = upload_file_gdrive(path_local=file_path, name=new_filename, path_google=gdrive_folder)
+        with file_lock:
+            gdrive_response = upload_file_gdrive(path_local=file_path, name=new_filename, path_google=gdrive_folder)
 
-        if isinstance(gdrive_file_id, str):
-            print(f"Arquivo inserido no Google Drive: {gdrive_file_id}")
-            os.remove(file_path)
+        if 'id' in gdrive_response:
+            print(f"Arquivo inserido no Google Drive: {gdrive_response['id']}")
+            try:
+                os.remove(file_path)
+                print(f"Arquivo local removido: {file_path}")
+            except Exception as e:
+                print(f"Erro ao remover o arquivo local: {file_path}. Detalhes: {e}")
         else:
-            print("Failed to upload file to Google Drive.")
+            print("Falha ao fazer upload do arquivo para o Google Drive. Detalhes:", gdrive_response.get('error'))
     except Exception as e:
         print(f"An error occurred while uploading the file: {e}")
 
@@ -132,7 +137,9 @@ def upload_file_local():
         new_filename = f"{random_prefix}_{filename}"
 
         file_path = os.path.join(UPLOAD_FOLDER, new_filename)
-        file.save(file_path)
+        
+        with file_lock:
+            file.save(file_path)
         
         is_image = imghdr.what(file_path)
 
