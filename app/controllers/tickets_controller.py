@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from sqlalchemy import or_
+from sqlalchemy import or_, asc, desc
 from app.models.tb_tickets import TbTickets
 from app.models.tb_tickets_tasks import TbTicketsTasks
 from app.models.tb_tickets_files import TbTicketsFiles
@@ -59,8 +59,12 @@ def get_minha_equipe():
         return jsonify({"error": "Filas parameter is required"}), 400
 
     cod_fluxo = request.args.get('cod_fluxo', None)
+    status = request.args.get('status', None)
+    st_sla = request.args.get('st_sla', None)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    sort_by = request.args.get('sort_by', None)
+    sort_order = request.args.get('sort_order', None)
     
     try:
         in_conditions = TbTickets.executor.in_(filas)
@@ -72,6 +76,22 @@ def get_minha_equipe():
         
         if cod_fluxo:
             query = query.filter(TbTickets.cod_fluxo.like(f"%{cod_fluxo}%"))
+        if status:
+            query = query.filter(TbTickets.status == status)
+        if st_sla:
+            query = query.filter(TbTickets.st_sla == st_sla)
+
+        if sort_by and sort_order:
+            sort_by_columns = sort_by.split(',')
+            sort_order_directions = sort_order.split(',')
+            
+            for col, order in zip(sort_by_columns, sort_order_directions):
+                if hasattr(TbTickets, col):
+                    column_attr = getattr(TbTickets, col)
+                    if order.lower() == 'desc':
+                        query = query.order_by(desc(column_attr))
+                    else:
+                        query = query.order_by(asc(column_attr))
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -112,8 +132,12 @@ def get_meus_atendimentos():
         return jsonify({"error": "User_id parameter is required"}), 400
 
     cod_fluxo = request.args.get('cod_fluxo', None)
+    status = request.args.get('status', None)
+    st_sla = request.args.get('st_sla', None)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    sort_by = request.args.get('sort_by', None)
+    sort_order = request.args.get('sort_order', None)
     
     try:        
         query = TbTickets.query.filter(
@@ -123,6 +147,22 @@ def get_meus_atendimentos():
         
         if cod_fluxo:
             query = query.filter(TbTickets.cod_fluxo.like(f"%{cod_fluxo}%"))
+        if status:
+            query = query.filter(TbTickets.status == status)
+        if st_sla:
+            query = query.filter(TbTickets.st_sla == st_sla)
+
+        if sort_by and sort_order:
+            sort_by_columns = sort_by.split(',')
+            sort_order_directions = sort_order.split(',')
+            
+            for col, order in zip(sort_by_columns, sort_order_directions):
+                if hasattr(TbTickets, col):
+                    column_attr = getattr(TbTickets, col)
+                    if order.lower() == 'desc':
+                        query = query.order_by(desc(column_attr))
+                    else:
+                        query = query.order_by(asc(column_attr))
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
