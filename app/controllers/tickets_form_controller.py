@@ -10,6 +10,7 @@ from app.models.tb_unidade import TbUnidade
 from app.models.tb_tickets_tasks_status import TbTicketsTasksStatus
 from app.models.vw_dominios_email import VwDominiosEmail
 from app.models.vw_itsm_destinatarios import VwItsmDestinatarios
+from app.models.vw_areas_negocio import VwAreasNegocio
 
 tickets_form_blueprint = Blueprint('tickets_form', __name__)
 
@@ -146,6 +147,17 @@ def get_all_dominios_email():
                 "organizacao": dominio.organizacao
             }
             for dominio in dominios
+        ]
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@tickets_form_blueprint.route('/areas-negocio', methods=['GET'])
+def get_all_areas_negocio():
+    try:
+        areas_negocio = VwAreasNegocio.query.all()
+        result = [
+            area_negocio.Area_negocio for area_negocio in areas_negocio
         ]
         return jsonify(result), 200
     except Exception as e:
