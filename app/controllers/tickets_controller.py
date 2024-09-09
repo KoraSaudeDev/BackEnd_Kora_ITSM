@@ -54,10 +54,19 @@ def get_meus_tickets():
 def get_minha_equipe():
     data = request.get_json()
     filas = data.get('filas', [])
+    
+    if len(filas) < 1:
+        return jsonify({
+            "page": 1,
+            "pages": 1,
+            "total_items": 0,
+            "items_per_page": 10,
+            "tickets": []
+        })
      
     if not filas:
         return jsonify({"error": "Filas parameter is required"}), 400
-
+ 
     cod_fluxo = request.args.get('cod_fluxo', None)
     status = request.args.get('status', None)
     st_sla = request.args.get('st_sla', None)

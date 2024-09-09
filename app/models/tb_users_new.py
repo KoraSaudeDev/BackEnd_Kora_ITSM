@@ -27,3 +27,4 @@ class TbUsersNew(db.Model):
     ds_tamanho_calcado = db.Column(db.String(5), nullable=True)
     bl_analista = db.Column(db.Integer, nullable=True)
     bl_fila = db.Column(db.Integer, nullable=True)
+    bl_gestao = db.Column(db.Integer, nullable=True)
