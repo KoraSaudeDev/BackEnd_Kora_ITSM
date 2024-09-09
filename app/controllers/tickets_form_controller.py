@@ -72,6 +72,7 @@ def get_all_slas():
             {
                 "sla": sla.tempo,
                 "prioridade": sla.prioridade,
+                "descricao": sla.descricao,
                 "tipo_tempo": sla.tipo_tempo
             }
             for sla in slas

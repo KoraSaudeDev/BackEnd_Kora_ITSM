@@ -35,7 +35,8 @@ def get_meus_tickets():
                 "unidade": ticket.unidade,
                 "categoria": ticket.categoria,
                 "subcategoria": ticket.subcategoria,
-                "assunto": ticket.assunto 
+                "assunto": ticket.assunto,
+                "ds_nivel": ticket.ds_nivel
             }
             for ticket in paginated_tickets.items
         ]
@@ -120,6 +121,7 @@ def get_minha_equipe():
                 "categoria": ticket.categoria,
                 "subcategoria": ticket.subcategoria,
                 "assunto": ticket.assunto,
+                "ds_nivel": ticket.ds_nivel
             }
             for ticket in paginated_tickets.items
         ]
@@ -191,6 +193,7 @@ def get_meus_atendimentos():
                 "categoria": ticket.categoria,
                 "subcategoria": ticket.subcategoria,
                 "assunto": ticket.assunto,
+                "ds_nivel": ticket.ds_nivel
             }
             for ticket in paginated_tickets.items
         ]
@@ -235,7 +238,8 @@ def get_tickets_preview():
                 "unidade": ticket.unidade,
                 "categoria": ticket.categoria,
                 "subcategoria": ticket.subcategoria,
-                "assunto": ticket.assunto 
+                "assunto": ticket.assunto,
+                "ds_nivel": ticket.ds_nivel
             }
             for ticket in paginated_tickets.items
         ]
