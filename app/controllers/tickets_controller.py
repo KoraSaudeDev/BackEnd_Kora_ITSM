@@ -1,8 +1,12 @@
 from flask import Blueprint, jsonify, request
-from sqlalchemy import or_, asc, desc
+from sqlalchemy import or_, and_, asc, desc, distinct
+import json
+from app import db
 from app.models.tb_tickets import TbTickets
 from app.models.tb_tickets_tasks import TbTicketsTasks
 from app.models.tb_tickets_files import TbTicketsFiles
+from app.models.tb_itsm_filtro_ma import TbItsmFiltroMa
+from app.models.tb_itsm_filtro_me import TbItsmFiltroMe
 
 tickets_blueprint = Blueprint('tickets', __name__)
 
@@ -68,13 +72,15 @@ def get_minha_equipe():
     if not filas:
         return jsonify({"error": "Filas parameter is required"}), 400
  
+    filtros = data.get('filtros', {})
+    
+    date_filters = filtros.get('dateFilters', {})
+    filter_options = filtros.get('filterOptions', {})
+    sort_orders = filtros.get('sortOrders', {})
+ 
     cod_fluxo = request.args.get('cod_fluxo', None)
-    status = request.args.get('status', None)
-    st_sla = request.args.get('st_sla', None)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    sort_by = request.args.get('sort_by', None)
-    sort_order = request.args.get('sort_order', None)
     
     try:
         in_conditions = TbTickets.executor.in_(filas)
@@ -84,24 +90,36 @@ def get_minha_equipe():
             TbTickets.status.notin_(["Finalizado", "Cancelado"])
         )
         
+        for column, dates in date_filters.items():
+            start_date = dates.get('startDate')
+            end_date = dates.get('endDate')
+            if start_date and end_date:
+                column_attr = getattr(TbTickets, column, None)
+                if column_attr:
+                    query = query.filter(and_(
+                        column_attr >= start_date,
+                        column_attr <= end_date
+                    ))
+
+        for column, values in filter_options.items():
+            column_attr = getattr(TbTickets, column, None)
+            if column_attr and isinstance(values, list):
+                query = query.filter(column_attr.in_(values))
+
         if cod_fluxo:
             query = query.filter(TbTickets.cod_fluxo.like(f"%{cod_fluxo}%"))
-        if status:
-            query = query.filter(TbTickets.status == status)
-        if st_sla:
-            query = query.filter(TbTickets.st_sla == st_sla)
 
-        if sort_by and sort_order:
-            sort_by_columns = sort_by.split(',')
-            sort_order_directions = sort_order.split(',')
-            
-            for col, order in zip(sort_by_columns, sort_order_directions):
+        if sort_orders:
+            sort_by_columns = []
+            for col, order in sort_orders.items():
                 if hasattr(TbTickets, col):
                     column_attr = getattr(TbTickets, col)
                     if order.lower() == 'desc':
-                        query = query.order_by(desc(column_attr))
+                        sort_by_columns.append(desc(column_attr))
                     else:
-                        query = query.order_by(asc(column_attr))
+                        sort_by_columns.append(asc(column_attr))
+            if sort_by_columns:
+                query = query.order_by(*sort_by_columns)
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -142,38 +160,53 @@ def get_meus_atendimentos():
     if not user_id:
         return jsonify({"error": "User_id parameter is required"}), 400
 
+    data = request.get_json()
+    filtros = data.get('filtros', {})
+    
+    date_filters = filtros.get('dateFilters', {})
+    filter_options = filtros.get('filterOptions', {})
+    sort_orders = filtros.get('sortOrders', {})
+
     cod_fluxo = request.args.get('cod_fluxo', None)
-    status = request.args.get('status', None)
-    st_sla = request.args.get('st_sla', None)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    sort_by = request.args.get('sort_by', None)
-    sort_order = request.args.get('sort_order', None)
-    
-    try:        
+
+    try:
         query = TbTickets.query.filter(
             TbTickets.executor == user_id,
             TbTickets.status.notin_(["Finalizado", "Cancelado"])
         )
-        
+
+        for column, dates in date_filters.items():
+            start_date = dates.get('startDate')
+            end_date = dates.get('endDate')
+            if start_date and end_date:
+                column_attr = getattr(TbTickets, column, None)
+                if column_attr:
+                    query = query.filter(and_(
+                        column_attr >= start_date,
+                        column_attr <= end_date
+                    ))
+
+        for column, values in filter_options.items():
+            column_attr = getattr(TbTickets, column, None)
+            if column_attr and isinstance(values, list):
+                query = query.filter(column_attr.in_(values))
+
         if cod_fluxo:
             query = query.filter(TbTickets.cod_fluxo.like(f"%{cod_fluxo}%"))
-        if status:
-            query = query.filter(TbTickets.status == status)
-        if st_sla:
-            query = query.filter(TbTickets.st_sla == st_sla)
 
-        if sort_by and sort_order:
-            sort_by_columns = sort_by.split(',')
-            sort_order_directions = sort_order.split(',')
-            
-            for col, order in zip(sort_by_columns, sort_order_directions):
+        if sort_orders:
+            sort_by_columns = []
+            for col, order in sort_orders.items():
                 if hasattr(TbTickets, col):
                     column_attr = getattr(TbTickets, col)
                     if order.lower() == 'desc':
-                        query = query.order_by(desc(column_attr))
+                        sort_by_columns.append(desc(column_attr))
                     else:
-                        query = query.order_by(asc(column_attr))
+                        sort_by_columns.append(asc(column_attr))
+            if sort_by_columns:
+                query = query.order_by(*sort_by_columns)
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -419,5 +452,31 @@ def get_ticket_files():
         ]
 
         return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@tickets_blueprint.route('/filtro-ma/<user_id>', methods=['GET'])
+def get_filtro_ma(user_id):
+    try:
+        existing_filtro = TbItsmFiltroMa.query.filter_by(id_user=user_id).first()
+        if existing_filtro:
+            filtro_data = json.loads(existing_filtro.filtro)
+            return jsonify(filtro_data), 200
+        else:
+            return jsonify([])
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@tickets_blueprint.route('/filtro-me/<user_id>', methods=['GET'])
+def get_filtro_me(user_id):
+    try:
+        existing_filtro = TbItsmFiltroMe.query.filter_by(id_user=user_id).first()
+        if existing_filtro:
+            filtro_data = json.loads(existing_filtro.filtro)
+            return jsonify(filtro_data), 200
+        else:
+            return jsonify([])
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500

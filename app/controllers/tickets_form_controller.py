@@ -11,6 +11,7 @@ from app.models.tb_tickets_tasks_status import TbTicketsTasksStatus
 from app.models.vw_dominios_email import VwDominiosEmail
 from app.models.vw_itsm_destinatarios import VwItsmDestinatarios
 from app.models.vw_areas_negocio import VwAreasNegocio
+from app.models.vw_itsm_status_tickets import VwItsmStatusTickets
 
 tickets_form_blueprint = Blueprint('tickets_form', __name__)
 
@@ -94,13 +95,18 @@ def get_all_hubs():
 
 @tickets_form_blueprint.route('/unidade', methods=['GET'])
 def get_unidades_by_hub():
-    hub = request.args.get('hub')
+    hubs = request.args.get('hub')
     
-    if not hub:
-        return jsonify({"error": "Hub parameter is required"}), 400
+    if not hubs:
+        return jsonify([])
+    
+    hubs_list = hubs.split(',')
     
     try:
-        query = db.session.query(TbUnidade.nu_hub, TbUnidade.st_razao_social).filter(TbUnidade.nu_hub == hub).distinct()
+        query = db.session.query(TbUnidade.nu_hub, TbUnidade.st_razao_social).filter(
+            TbUnidade.nu_hub.in_(hubs_list)
+        ).distinct().order_by(TbUnidade.nu_hub)
+        
         unidades = query.all()
         
         result = [
@@ -133,6 +139,17 @@ def get_all_status():
         status = TbTicketsTasksStatus.query.order_by(TbTicketsTasksStatus.st_decricao.asc()).all()
         result = [
             stt.st_decricao for stt in status
+        ]
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@tickets_form_blueprint.route('/status-tickets', methods=['GET'])
+def get_all_status_tickets():
+    try:
+        status = VwItsmStatusTickets.query.order_by(VwItsmStatusTickets.nome.asc()).all()
+        result = [
+            stt.nome for stt in status
         ]
         return jsonify(result), 200
     except Exception as e:

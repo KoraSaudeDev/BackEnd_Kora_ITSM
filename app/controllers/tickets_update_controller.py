@@ -9,6 +9,8 @@ from app.models.tb_tickets import TbTickets
 from app.models.tb_tickets_tasks import TbTicketsTasks
 from app.models.tb_tickets_files import TbTicketsFiles
 from app.models.tb_itsm_log import TbItsmLog
+from app.models.tb_itsm_filtro_ma import TbItsmFiltroMa
+from app.models.tb_itsm_filtro_me import TbItsmFiltroMe
 from app import db
 
 load_dotenv()
@@ -66,31 +68,6 @@ def update_task(cod_task):
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
-@tickets_update_blueprint.route('/sla', methods=['POST'])
-def update_sla_status():
-    cod_fluxo = request.args.get('cod_fluxo')
-
-    if not cod_fluxo:
-        return jsonify({"error": "Cod_fluxo parameter is required"}), 400
-
-    try:
-        url = f"{getenv('URL_GCP_KORA_API')}/sla"
-
-        payload = json.dumps({
-            "cod_fluxo": cod_fluxo,
-            "N° Ticket": cod_fluxo
-        })
-        headers = {
-            'Content-Type': 'application/json'
-        }
-
-        response = requests.post(url, headers=headers, data=payload).json()
-        
-        return jsonify(response)
-
-    except SQLAlchemyError as e:
-        return jsonify({"error": str(e)}), 500
-
 @tickets_update_blueprint.route('/task', methods=['POST'])
 def create_task():
     data = request.json
@@ -135,6 +112,121 @@ def create_file():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+@tickets_update_blueprint.route('/log', methods=['POST'])
+def create_log():
+    data = request.json
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        new_log = TbItsmLog(**data)
+
+        db.session.add(new_log)
+        db.session.commit()
+
+        return jsonify({"message": "Log created successfully"}), 201
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@tickets_update_blueprint.route('/filtro-ma', methods=['POST'])
+def create_update_filtro_ma():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "User_id parameter is required"}), 400
+    
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        json_data = json.dumps(data)
+        existing_filtro = TbItsmFiltroMa.query.filter_by(id_user=user_id).first()
+        
+        if existing_filtro:
+            existing_filtro.filtro = json_data
+            db.session.commit()
+            return jsonify("Filtro updated successfully"), 200
+        else:
+            filtro = TbItsmFiltroMa(id_user=user_id, filtro=json_data)
+            db.session.add(filtro)
+            db.session.commit()
+            return jsonify("Filtro created successfully"), 201
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@tickets_update_blueprint.route('/delete-filtro-ma', methods=['POST'])
+def delete_filtro_ma():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "User_id parameter is required"}), 400
+    
+    try:
+        existing_filtro = TbItsmFiltroMa.query.filter_by(id_user=user_id).first()
+        
+        if existing_filtro:
+            db.session.delete(existing_filtro)
+            db.session.commit()
+            return jsonify("Filtro deleted successfully")
+        else:
+            return jsonify("User does not have a filter")
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@tickets_update_blueprint.route('/filtro-me', methods=['POST'])
+def create_update_filtro_me():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "User_id parameter is required"}), 400
+    
+    data = request.json
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        json_data = json.dumps(data)
+        existing_filtro = TbItsmFiltroMe.query.filter_by(id_user=user_id).first()
+        
+        if existing_filtro:
+            existing_filtro.filtro = json_data
+            db.session.commit()
+            return jsonify("Filtro updated successfully"), 200
+        else:
+            filtro = TbItsmFiltroMe(id_user=user_id, filtro=json_data)
+            db.session.add(filtro)
+            db.session.commit()
+            return jsonify("Filtro created successfully"), 201
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@tickets_update_blueprint.route('/delete-filtro-me', methods=['POST'])
+def delete_filtro_me():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({"error": "User_id parameter is required"}), 400
+    
+    try:
+        existing_filtro = TbItsmFiltroMe.query.filter_by(id_user=user_id).first()
+        
+        if existing_filtro:
+            db.session.delete(existing_filtro)
+            db.session.commit()
+            return jsonify("Filtro deleted successfully"), 200
+        else:
+            return jsonify("User does not have a filter"), 404
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
 @tickets_update_blueprint.route('/create-user-google', methods=['POST'])
 def create_google_user():
     data = request.json
@@ -154,21 +246,27 @@ def create_google_user():
     except SQLAlchemyError as e:
         return jsonify({"error": str(e)}), 500
 
-@tickets_update_blueprint.route('/log', methods=['POST'])
-def create_log():
-    data = request.json
+@tickets_update_blueprint.route('/sla', methods=['POST'])
+def update_sla_status():
+    cod_fluxo = request.args.get('cod_fluxo')
 
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
+    if not cod_fluxo:
+        return jsonify({"error": "Cod_fluxo parameter is required"}), 400
 
     try:
-        new_log = TbItsmLog(**data)
+        url = f"{getenv('URL_GCP_KORA_API')}/sla"
 
-        db.session.add(new_log)
-        db.session.commit()
+        payload = json.dumps({
+            "cod_fluxo": cod_fluxo,
+            "N° Ticket": cod_fluxo
+        })
+        headers = {
+            'Content-Type': 'application/json'
+        }
 
-        return jsonify({"message": "Log created successfully"}), 201
+        response = requests.post(url, headers=headers, data=payload).json()
+        
+        return jsonify(response)
 
     except SQLAlchemyError as e:
-        db.session.rollback()
         return jsonify({"error": str(e)}), 500
