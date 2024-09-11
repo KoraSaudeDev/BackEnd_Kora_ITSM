@@ -219,9 +219,9 @@ def delete_filtro_me():
         if existing_filtro:
             db.session.delete(existing_filtro)
             db.session.commit()
-            return jsonify("Filtro deleted successfully"), 200
+            return jsonify("Filtro deleted successfully")
         else:
-            return jsonify("User does not have a filter"), 404
+            return jsonify("User does not have a filter")
 
     except SQLAlchemyError as e:
         db.session.rollback()

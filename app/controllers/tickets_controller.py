@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import or_, and_, asc, desc, distinct
 import json
+from datetime import datetime, time
 from app import db
 from app.models.tb_tickets import TbTickets
 from app.models.tb_tickets_tasks import TbTicketsTasks
@@ -73,10 +74,10 @@ def get_minha_equipe():
         return jsonify({"error": "Filas parameter is required"}), 400
  
     filtros = data.get('filtros', {})
+    sort_orders = data.get('sort', {})
     
     date_filters = filtros.get('dateFilters', {})
     filter_options = filtros.get('filterOptions', {})
-    sort_orders = filtros.get('sortOrders', {})
  
     cod_fluxo = request.args.get('cod_fluxo', None)
     page = request.args.get('page', 1, type=int)
@@ -93,7 +94,18 @@ def get_minha_equipe():
         for column, dates in date_filters.items():
             start_date = dates.get('startDate')
             end_date = dates.get('endDate')
+            
             if start_date and end_date:
+                if isinstance(start_date, datetime):
+                    start_date = start_date.replace(hour=0, minute=0, second=0)
+                else:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
+                
+                if isinstance(end_date, datetime):
+                    end_date = end_date.replace(hour=23, minute=59, second=59)
+                else:
+                    end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+                
                 column_attr = getattr(TbTickets, column, None)
                 if column_attr:
                     query = query.filter(and_(
@@ -162,11 +174,11 @@ def get_meus_atendimentos():
 
     data = request.get_json()
     filtros = data.get('filtros', {})
+    sort_orders = data.get('sort', {})
     
     date_filters = filtros.get('dateFilters', {})
     filter_options = filtros.get('filterOptions', {})
-    sort_orders = filtros.get('sortOrders', {})
-
+    
     cod_fluxo = request.args.get('cod_fluxo', None)
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -180,7 +192,18 @@ def get_meus_atendimentos():
         for column, dates in date_filters.items():
             start_date = dates.get('startDate')
             end_date = dates.get('endDate')
+            
             if start_date and end_date:
+                if isinstance(start_date, datetime):
+                    start_date = start_date.replace(hour=0, minute=0, second=0)
+                else:
+                    start_date = datetime.strptime(start_date, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
+                
+                if isinstance(end_date, datetime):
+                    end_date = end_date.replace(hour=23, minute=59, second=59)
+                else:
+                    end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+                
                 column_attr = getattr(TbTickets, column, None)
                 if column_attr:
                     query = query.filter(and_(
