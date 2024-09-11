@@ -266,7 +266,7 @@ def get_meus_atendimentos():
 
 @tickets_blueprint.route('/tickets-preview', methods=['GET'])
 def get_tickets_preview():
-    cod_fluxo = request.args.get('id')
+    parametro = request.args.get('p')
     
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -274,8 +274,14 @@ def get_tickets_preview():
     try:
         query = TbTickets.query
 
-        if cod_fluxo:
-            query = query.filter(TbTickets.cod_fluxo.like(f'%{cod_fluxo}%'))
+        if parametro:
+            query = query.filter(
+                or_(
+                    TbTickets.cod_fluxo.like(f'%{parametro}%'),
+                    TbTickets.nome.like(f'%{parametro}%'),
+                    TbTickets.email_solicitante.like(f'%{parametro}%')
+                )
+            )
         
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -331,6 +337,8 @@ def get_ticket():
                 "data_limite": ticket.data_limite,
                 "st_sla": ticket.st_sla,
                 "st_sla_corrido": ticket.st_sla_corrido,
+                "tempo_minutos": ticket.tempo_minutos,
+                "tempo_minutos_corridos": ticket.tempo_minutos_corridos,
                 "ds_nivel": ticket.ds_nivel,
                 "grupo": ticket.grupo,
                 "executor": ticket.executor,
