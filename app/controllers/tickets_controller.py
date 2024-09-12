@@ -275,13 +275,19 @@ def get_tickets_preview():
         query = TbTickets.query
 
         if parametro:
-            query = query.filter(
-                or_(
-                    TbTickets.cod_fluxo.like(f'%{parametro}%'),
-                    TbTickets.nome.like(f'%{parametro}%'),
-                    TbTickets.email_solicitante.like(f'%{parametro}%')
+            if parametro.isdigit():
+                query = query.filter(
+                    TbTickets.cod_fluxo == parametro
                 )
-            )
+            else:
+                query = query.filter(
+                    or_(
+                        TbTickets.nome.like(f'%{parametro}%'),
+                        TbTickets.email_solicitante.like(f'%{parametro}%')
+                    )
+                )
+        
+        query = query.order_by(TbTickets.cod_fluxo.desc())
         
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
