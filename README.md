@@ -28,6 +28,7 @@
 ├── docker-compose.yml            # Docker compose
 ├── Dockerfile                    # Dockerfile
 └── requirements.txt              # Dependências do projeto
+└── ...                           # Outros arquivos
 ```
 
 ## Configuração do Arquivo de Ambiente
