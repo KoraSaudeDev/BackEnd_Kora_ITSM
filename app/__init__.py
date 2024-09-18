@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
+from flask_cors import CORS
 
 db = SQLAlchemy()
 mail = Mail()
@@ -11,6 +12,8 @@ def create_app():
 
     db.init_app(app)
     mail.init_app(app)
+    
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
     from app.views.routes import main_blueprint
     app.register_blueprint(main_blueprint)
