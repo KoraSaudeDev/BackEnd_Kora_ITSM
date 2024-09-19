@@ -1,7 +1,10 @@
 from flask import Blueprint, jsonify, request, make_response
 import requests
+from os import getenv
 from google.oauth2 import service_account
 import google.auth.transport.requests
+
+SERVICE_ACCOUNT_FILE = getenv('SERVICE_ACCOUNT_FILE')
 
 chat_blueprint = Blueprint('chat', __name__)
 
@@ -66,7 +69,7 @@ def send_message_to_dm(space_name, message_text):
 def get_bot_access_token():
     """Função para obter o token OAuth 2.0 do bot usando uma conta de serviço"""
     credentials = service_account.Credentials.from_service_account_file(
-        'itsmkora-account-file.json',
+        SERVICE_ACCOUNT_FILE,
         scopes=['https://www.googleapis.com/auth/chat.bot']
     )
 
