@@ -23,6 +23,8 @@ from app.models.vw_areas_diretoria import VwAreasDiretoria
 from app.models.tb_tipo_colaborador import TbTipoColaborador
 from app.models.tb_licenca_google import TbLicencaGoogle
 from app.models.tb_tipo_usuario import TbTipoUsuario
+from app.models.vw_itsm_filas_emails import VwItsmFilasEmails
+from app.models.tb_users_new import TbUsersNew
 
 tickets_form_blueprint = Blueprint('tickets_form', __name__)
 
@@ -143,6 +145,37 @@ def get_all_usuarios_executores():
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@tickets_form_blueprint.route('/email-fila', methods=['GET'])
+def get_email_fila():
+    id_fila = request.args.get('id_fila')
+    unidade = request.args.get('unidade')
+
+    if not id_fila or not unidade:
+        return jsonify([])
+
+    try:
+        result = VwItsmFilasEmails.query.filter(
+            VwItsmFilasEmails.id_fila == id_fila,
+            or_(
+                VwItsmFilasEmails.unidade == unidade,
+                VwItsmFilasEmails.unidade.is_(None)
+            )
+        ).all()
+
+        if result:
+            data = [row.email for row in result]
+            return jsonify(data), 200
+        
+        user_result = TbUsersNew.query.filter_by(id=id_fila).all()
+
+        if user_result:
+            user_emails = [user.ds_email for user in user_result if user.ds_email]
+            return jsonify(user_emails), 200
+        else:
+            return jsonify([]), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @tickets_form_blueprint.route('/status', methods=['GET'])
 def get_all_status():
