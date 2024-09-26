@@ -125,8 +125,9 @@ def get_minha_equipe():
         if cod_fluxo:
             query = query.filter(TbTickets.cod_fluxo.like(f"%{cod_fluxo}%"))
 
+        sort_by_columns = []
+
         if sort_orders:
-            sort_by_columns = []
             for col, order in sort_orders.items():
                 if hasattr(TbTickets, col):
                     column_attr = getattr(TbTickets, col)
@@ -134,8 +135,12 @@ def get_minha_equipe():
                         sort_by_columns.append(desc(column_attr))
                     else:
                         sort_by_columns.append(asc(column_attr))
-            if sort_by_columns:
-                query = query.order_by(*sort_by_columns)
+
+        if not any(col == 'abertura' for col in sort_orders):
+            sort_by_columns.append(desc(TbTickets.abertura))
+
+        if sort_by_columns:
+            query = query.order_by(*sort_by_columns)
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -229,8 +234,9 @@ def get_meus_atendimentos():
         if cod_fluxo:
             query = query.filter(TbTickets.cod_fluxo.like(f"%{cod_fluxo}%"))
 
+        sort_by_columns = []
+
         if sort_orders:
-            sort_by_columns = []
             for col, order in sort_orders.items():
                 if hasattr(TbTickets, col):
                     column_attr = getattr(TbTickets, col)
@@ -238,8 +244,12 @@ def get_meus_atendimentos():
                         sort_by_columns.append(desc(column_attr))
                     else:
                         sort_by_columns.append(asc(column_attr))
-            if sort_by_columns:
-                query = query.order_by(*sort_by_columns)
+
+        if not any(col == 'abertura' for col in sort_orders):
+            sort_by_columns.append(desc(TbTickets.abertura))
+
+        if sort_by_columns:
+            query = query.order_by(*sort_by_columns)
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -296,7 +306,8 @@ def get_tickets_preview():
                 query = query.filter(
                     or_(
                         TbTickets.nome.like(f'%{parametro}%'),
-                        TbTickets.email_solicitante.like(f'%{parametro}%')
+                        TbTickets.email_solicitante.like(f'%{parametro}%'),
+                        TbTickets.descricao.like(f'%{parametro}%')
                     )
                 )
         
