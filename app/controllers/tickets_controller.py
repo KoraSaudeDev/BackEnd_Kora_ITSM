@@ -8,6 +8,7 @@ from app.models.tb_tickets_tasks import TbTicketsTasks
 from app.models.tb_tickets_files import TbTicketsFiles
 from app.models.tb_itsm_filtro_ma import TbItsmFiltroMa
 from app.models.tb_itsm_filtro_me import TbItsmFiltroMe
+from app.models.vw_itsm_sla import VwItsmSla
 
 tickets_blueprint = Blueprint('tickets', __name__)
 
@@ -84,6 +85,9 @@ def get_minha_equipe():
     per_page = request.args.get('per_page', 10, type=int)
     
     try:
+        slas = VwItsmSla.query.all()
+        sla_mapping = {sla.prioridade: sla.descricao for sla in slas}
+        
         in_conditions = TbTickets.executor.in_(filas)
         
         query = TbTickets.query.filter(
@@ -135,8 +139,12 @@ def get_minha_equipe():
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
-        results = [
-            {
+        results = []
+        for ticket in paginated_tickets.items:
+            sla_description = sla_mapping.get(ticket.ds_nivel, "N/A")
+            prioridade_descricao = f"{ticket.ds_nivel} - {sla_description}"
+            
+            results.append({
                 "id": ticket.id,
                 "cod_fluxo": ticket.cod_fluxo,
                 "abertura": ticket.abertura,
@@ -151,10 +159,9 @@ def get_minha_equipe():
                 "categoria": ticket.categoria,
                 "subcategoria": ticket.subcategoria,
                 "assunto": ticket.assunto,
-                "ds_nivel": ticket.ds_nivel
-            }
-            for ticket in paginated_tickets.items
-        ]
+                "ds_nivel": ticket.ds_nivel,
+                "prioridadeDescricao": prioridade_descricao
+            })
 
         return jsonify({
             "page": paginated_tickets.page,
@@ -184,6 +191,9 @@ def get_meus_atendimentos():
     per_page = request.args.get('per_page', 10, type=int)
 
     try:
+        slas = VwItsmSla.query.all()
+        sla_mapping = {sla.prioridade: sla.descricao for sla in slas}
+        
         query = TbTickets.query.filter(
             TbTickets.executor == user_id,
             TbTickets.status.notin_(["Finalizado", "Cancelado"])
@@ -233,8 +243,12 @@ def get_meus_atendimentos():
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
-        results = [
-            {
+        results = []
+        for ticket in paginated_tickets.items:
+            sla_description = sla_mapping.get(ticket.ds_nivel, "N/A")
+            prioridade_descricao = f"{ticket.ds_nivel} - {sla_description}"
+            
+            results.append({
                 "id": ticket.id,
                 "cod_fluxo": ticket.cod_fluxo,
                 "abertura": ticket.abertura,
@@ -249,10 +263,9 @@ def get_meus_atendimentos():
                 "categoria": ticket.categoria,
                 "subcategoria": ticket.subcategoria,
                 "assunto": ticket.assunto,
-                "ds_nivel": ticket.ds_nivel
-            }
-            for ticket in paginated_tickets.items
-        ]
+                "ds_nivel": ticket.ds_nivel,
+                "prioridadeDescricao": prioridade_descricao
+            })
 
         return jsonify({
             "page": paginated_tickets.page,
