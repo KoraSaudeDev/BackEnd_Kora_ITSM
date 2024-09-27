@@ -7,6 +7,8 @@ from app.controllers.tickets_files_controller import tickets_files_blueprint
 from app.controllers.email_controller import email_blueprint
 from app.controllers.chat_controller import chat_blueprint
 from app.controllers.menu_controller import menu_blueprint
+from app.controllers.sap_controller import sap_blueprint
+from app.controllers.wf_requisicao_form_controller import wf_requisicao_form_blueprint
 
 main_blueprint = Blueprint('main', __name__)
 
@@ -18,3 +20,5 @@ main_blueprint.register_blueprint(tickets_files_blueprint, url_prefix='/tickets/
 main_blueprint.register_blueprint(email_blueprint, url_prefix='/email')
 main_blueprint.register_blueprint(chat_blueprint, url_prefix='/chat')
 main_blueprint.register_blueprint(menu_blueprint, url_prefix='/menu')
+main_blueprint.register_blueprint(sap_blueprint, url_prefix='/sap')
+main_blueprint.register_blueprint(wf_requisicao_form_blueprint, url_prefix='/wf-requisicao/form')
