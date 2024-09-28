@@ -120,3 +120,4 @@ class TbTickets(db.Model):
     cargo_solicitante = db.Column(db.String(250), nullable=True)
     email_receb_alias = db.Column(db.Text, nullable=True)
     endereco_alias = db.Column(db.Text, nullable=True)
+    cp_id_categoria = db.Column(db.Integer, nullable=True)

@@ -443,7 +443,8 @@ def get_ticket():
                 "Estado": ticket.Estado,
                 "Cidade": ticket.Cidade,
                 "Logon_Script": ticket.Logon_Script,
-                "Nome_Empresa": ticket.Nome_Empresa
+                "Nome_Empresa": ticket.Nome_Empresa,
+                "cp_id_categoria": ticket.cp_id_categoria
             }
 
         return jsonify(result)
