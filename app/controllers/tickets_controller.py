@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, request
+import pandas as pd
+from flask import Blueprint, jsonify, make_response, request
+from io import BytesIO
 from sqlalchemy import or_, and_, asc, desc, distinct
 import json
 from datetime import datetime, time
@@ -147,7 +149,10 @@ def get_minha_equipe():
         results = []
         for ticket in paginated_tickets.items:
             sla_description = sla_mapping.get(ticket.ds_nivel, "N/A")
-            prioridade_descricao = f"{ticket.ds_nivel} - {sla_description}"
+            if sla_description:
+                prioridade_descricao = f"{ticket.ds_nivel} - {sla_description}"
+            else:
+                prioridade_descricao = f"{ticket.ds_nivel}"
             
             results.append({
                 "id": ticket.id,
@@ -256,7 +261,10 @@ def get_meus_atendimentos():
         results = []
         for ticket in paginated_tickets.items:
             sla_description = sla_mapping.get(ticket.ds_nivel, "N/A")
-            prioridade_descricao = f"{ticket.ds_nivel} - {sla_description}"
+            if sla_description:
+                prioridade_descricao = f"{ticket.ds_nivel} - {sla_description}"
+            else:
+                prioridade_descricao = f"{ticket.ds_nivel}"
             
             results.append({
                 "id": ticket.id,
@@ -542,3 +550,132 @@ def get_filtro_me(user_id):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@tickets_blueprint.route('/export', methods=['POST'])
+def export_tickets():
+    data = request.get_json()
+
+    filter_options = data.get('filterOptions', {})
+    date_filters = data.get('dateFilters', {})
+
+    query = TbTickets.query
+
+    for column, dates in date_filters.items():
+        start_date = dates.get('startDate')
+        end_date = dates.get('endDate')
+        
+        if start_date and end_date:
+            if isinstance(start_date, datetime):
+                start_date = start_date.replace(hour=0, minute=0, second=0)
+            else:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').replace(hour=0, minute=0, second=0)
+            
+            if isinstance(end_date, datetime):
+                end_date = end_date.replace(hour=23, minute=59, second=59)
+            else:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').replace(hour=23, minute=59, second=59)
+            
+            column_attr = getattr(TbTickets, column, None)
+            if column_attr:
+                query = query.filter(and_(
+                    column_attr >= start_date,
+                    column_attr <= end_date
+                ))
+
+    for column, values in filter_options.items():
+        column_attr = getattr(TbTickets, column, None)
+        if column_attr and isinstance(values, list):
+            query = query.filter(column_attr.in_(values))
+    
+    results = query.all()
+    
+    data_list = [{
+        "id": ticket.id,
+        "cod_fluxo": ticket.cod_fluxo,
+        "abertura": ticket.abertura,
+        "data_fim": ticket.data_fim,
+        "finalizado_por": ticket.finalizado_por,
+        "cancelado_por": ticket.cancelado_por,
+        "status": ticket.status,
+        "data_limite": ticket.data_limite,
+        "st_sla": ticket.st_sla,
+        "st_sla_corrido": ticket.st_sla_corrido,
+        "tempo_minutos": ticket.tempo_minutos,
+        "tempo_minutos_corridos": ticket.tempo_minutos_corridos,
+        "ds_nivel": ticket.ds_nivel,
+        "grupo": ticket.grupo,
+        "executor": ticket.executor,
+        "nome": ticket.nome,
+        "matricula": ticket.matricula,
+        "telefone": ticket.telefone,
+        "email_solicitante": ticket.email_solicitante,
+        "cargo_solic": ticket.cargo_solic,
+        "area_negocio": ticket.area_negocio,
+        "departamento": ticket.departamento,
+        "hub": ticket.hub,
+        "unidade": ticket.unidade,
+        "categoria": ticket.categoria,
+        "subcategoria": ticket.subcategoria,
+        "assunto": ticket.assunto,
+        "descricao": ticket.descricao,
+        "anexo": ticket.anexo,
+        "novo_usuario": ticket.novo_usuario,
+        "primeiro_nome_user": ticket.primeiro_nome_user,
+        "sobrenome_user": ticket.sobrenome_user,
+        "email_user": ticket.email_user,
+        "usuario_mv": ticket.usuario_mv,
+        "dt_nascimento": ticket.dt_nascimento,
+        "cpf": ticket.cpf,
+        "matricula_senior": ticket.matricula_senior,
+        "matricula_final": ticket.matricula_final,
+        "n_tel_usuario": ticket.n_tel_usuario,
+        "usuario_modelo": ticket.usuario_modelo,
+        "ds_tipo_colaborador": ticket.ds_tipo_colaborador,
+        "hub_novo_usu": ticket.hub_novo_usu,
+        "unidade_novo_usu": ticket.unidade_novo_usu,
+        "centro_custo": ticket.centro_custo,
+        "cargo": ticket.cargo,
+        "departamento_novo_usuario": ticket.departamento_novo_usuario,
+        "ds_entidade": ticket.ds_entidade,
+        "ds_acesso_solic": ticket.ds_acesso_solic,
+        "cod_prest_mv": ticket.cod_prest_mv,
+        "tipo_usuario": ticket.tipo_usuario,
+        "ds_vinc_empr": ticket.ds_vinc_empr,
+        "empresa_colab_cadastrado": ticket.empresa_colab_cadastrado,
+        "sigla_cp": ticket.sigla_cp,
+        "registro_cp": ticket.registro_cp,
+        "ds_tipo_cargo": ticket.ds_tipo_cargo,
+        "dominio_email": ticket.dominio_email,
+        "organizacao_dominio": ticket.organizacao_dominio,
+        "ds_licenca": ticket.ds_licenca,
+        "ds_custo_novo_usu": ticket.ds_custo_novo_usu,
+        "ds_gestor": ticket.ds_gestor,
+        "ds_email_gestor": ticket.ds_email_gestor,
+        "ds_gerente": ticket.ds_gerente,
+        "ds_email_gerente": ticket.ds_email_gerente,
+        "aprovador_sap": ticket.aprovador_sap,
+        "public_alvo": ticket.public_alvo,
+        "obj_comunicacao": ticket.obj_comunicacao,
+        "n_verba": ticket.n_verba,
+        "material_referencia": ticket.material_referencia,
+        "ds_endereco": ticket.ds_endereco,
+        "email_receb_alias": ticket.email_receb_alias,
+        "endereco_alias": ticket.endereco_alias,
+        "ds_obs": ticket.ds_obs,
+        "anexo_resposta": ticket.anexo_resposta,
+        "cod_change": ticket.cod_change,
+        "cp_id_categoria": ticket.cp_id_categoria
+    } for ticket in results]
+
+    df = pd.DataFrame(data_list)
+    
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Tickets')
+    
+    output.seek(0)
+    response = make_response(output.read())
+    response.headers['Content-Disposition'] = 'attachment; filename=tickets.xlsx'
+    response.headers['Content-type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    
+    return response

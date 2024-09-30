@@ -11,3 +11,5 @@ google-api-python-client
 gunicorn
 requests
 Flask-Mail
+pandas
+xlsxwriter
