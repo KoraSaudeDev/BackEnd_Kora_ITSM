@@ -12,3 +12,4 @@ class TbSuporteMenu(db.Model):
     apiCounterConfig = db.Column(db.String(1000), nullable=True)
     componentPath = db.Column(db.String(255), nullable=True)
     active = db.Column(db.Boolean, default=True)
+    parent_relation = db.Column(db.Integer)

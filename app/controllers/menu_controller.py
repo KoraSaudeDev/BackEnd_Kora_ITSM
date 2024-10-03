@@ -19,7 +19,8 @@ def get_menus():
                 "apiCounterConfig": menu.apiCounterConfig, 
                 "icon": menu.icon, 
                 "parent_id": menu.parent_id,
-                "componentPath": menu.componentPath
+                "componentPath": menu.componentPath,
+                "parent_relation": menu.parent_relation
             }
             for menu in menus
         ]
