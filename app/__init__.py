@@ -19,7 +19,7 @@ def create_app():
     def log_request_info():
         x_user_email = request.headers.get('X-User-Email', 'N/A')
         referer = request.headers.get('Referer', 'N/A')
-        print(f"{request.path} - X-User-Email: {x_user_email} - Referer: {referer} - Body: {request.get_data(as_text=True)}")
+        print(f"{request.path} - X-User-Email: {x_user_email} - Referer: {referer}")
 
     from app.views.routes import main_blueprint
     app.register_blueprint(main_blueprint)
