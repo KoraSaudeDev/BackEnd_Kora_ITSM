@@ -1,7 +1,7 @@
 from app import db
 
-class VwRequisicaoCompraUnidades(db.Model):
-    __tablename__ = 'VW_REQUISICAO_COMPRA_UNIDADES'
+class VwWFPOUnidades(db.Model):
+    __tablename__ = 'VW_WF_PO_UNIDADES'
 
     unidade = db.Column(db.String(255), primary_key=True)
     nu_codigo_sap = db.Column(db.String(50))

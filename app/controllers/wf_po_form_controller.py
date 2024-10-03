@@ -1,20 +1,23 @@
 from flask import Blueprint, jsonify, request
 from sqlalchemy import or_
 from app import db
-from app.models.vw_requisicao_compra_unidades import VwRequisicaoCompraUnidades
+from app.models.vw_wf_po_unidades import VwWFPOUnidades
+from app.utils.auth_utils import token_required
 
-wf_requisicao_form_blueprint = Blueprint('wf_requisicao_form', __name__)
+wf_po_form_blueprint = Blueprint('wf_po_form', __name__)
 
-@wf_requisicao_form_blueprint.route('/hub', methods=['GET'])
+@wf_po_form_blueprint.route('/hub', methods=['GET'])
+@token_required
 def get_all_hubs():
     try:
-        hubs = db.session.query(VwRequisicaoCompraUnidades.hub).distinct().all()
+        hubs = db.session.query(VwWFPOUnidades.hub).distinct().all()
         result = [hub[0] for hub in hubs]
         return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@wf_requisicao_form_blueprint.route('/unidade', methods=['GET'])
+@wf_po_form_blueprint.route('/unidade', methods=['GET'])
+@token_required
 def get_unidade():
     hub = request.args.get('hub')
 
@@ -23,10 +26,10 @@ def get_unidade():
     
     try:
         unidades = db.session.query(
-            VwRequisicaoCompraUnidades.unidade,
-            VwRequisicaoCompraUnidades.nu_codigo_sap
+            VwWFPOUnidades.unidade,
+            VwWFPOUnidades.nu_codigo_sap
         ).filter(
-            VwRequisicaoCompraUnidades.hub == hub
+            VwWFPOUnidades.hub == hub
         ).distinct().all()
         
         result = [{"unidade": unidade.unidade, "cod_sap": unidade.nu_codigo_sap} for unidade in unidades]
