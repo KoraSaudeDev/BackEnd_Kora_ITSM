@@ -11,10 +11,12 @@ from app.models.tb_tickets_files import TbTicketsFiles
 from app.models.tb_itsm_filtro_ma import TbItsmFiltroMa
 from app.models.tb_itsm_filtro_me import TbItsmFiltroMe
 from app.models.vw_itsm_sla import VwItsmSla
+from app.utils.auth_utils import token_required
 
 tickets_blueprint = Blueprint('tickets', __name__)
 
 @tickets_blueprint.route('/meus-tickets', methods=['GET'])
+@token_required
 def get_meus_tickets():
     email = request.args.get('email')
     if not email:
@@ -60,6 +62,7 @@ def get_meus_tickets():
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/minha-equipe', methods=['POST'])
+@token_required
 def get_minha_equipe():
     data = request.get_json()
     filas = data.get('filas', [])
@@ -184,6 +187,7 @@ def get_minha_equipe():
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/meus-atendimentos', methods=['POST'])
+@token_required
 def get_meus_atendimentos():
     user_id = request.args.get('user_id')
     if not user_id:
@@ -296,6 +300,7 @@ def get_meus_atendimentos():
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/tickets-preview', methods=['GET'])
+@token_required
 def get_tickets_preview():
     parametro = request.args.get('p')
     
@@ -355,6 +360,7 @@ def get_tickets_preview():
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/ticket', methods=['GET'])
+@token_required
 def get_ticket():
     cod_fluxo = request.args.get('cod_fluxo')
     if not cod_fluxo:
@@ -460,6 +466,7 @@ def get_ticket():
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/ticket-tasks', methods=['GET'])
+@token_required
 def get_ticket_tasks():
     id = request.args.get('id')
     if not id:
@@ -500,6 +507,7 @@ def get_ticket_tasks():
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/ticket-files', methods=['GET'])
+@token_required
 def get_ticket_files():
     id = request.args.get('id')
     if not id:
@@ -526,6 +534,7 @@ def get_ticket_files():
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/filtro-ma/<user_id>', methods=['GET'])
+@token_required
 def get_filtro_ma(user_id):
     try:
         existing_filtro = TbItsmFiltroMa.query.filter_by(id_user=user_id).first()
@@ -539,6 +548,7 @@ def get_filtro_ma(user_id):
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/filtro-me/<user_id>', methods=['GET'])
+@token_required
 def get_filtro_me(user_id):
     try:
         existing_filtro = TbItsmFiltroMe.query.filter_by(id_user=user_id).first()
@@ -552,6 +562,7 @@ def get_filtro_me(user_id):
         return jsonify({"error": str(e)}), 500
 
 @tickets_blueprint.route('/export', methods=['POST'])
+@token_required
 def export_tickets():
     data = request.get_json()
 

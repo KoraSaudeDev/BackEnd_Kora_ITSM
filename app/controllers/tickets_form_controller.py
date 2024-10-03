@@ -25,10 +25,12 @@ from app.models.tb_licenca_google import TbLicencaGoogle
 from app.models.tb_tipo_usuario import TbTipoUsuario
 from app.models.vw_itsm_filas_emails import VwItsmFilasEmails
 from app.models.tb_users_new import TbUsersNew
+from app.utils.auth_utils import token_required
 
 tickets_form_blueprint = Blueprint('tickets_form', __name__)
 
 @tickets_form_blueprint.route('/categorias', methods=['GET'])
+@token_required
 def get_all_categorias():
     try:
         categorias = VwItsmCategoria.query.all()
@@ -40,6 +42,7 @@ def get_all_categorias():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/subcategorias', methods=['GET'])
+@token_required
 def get_subcategorias_by_categoria():
     categoria = request.args.get('categoria')
     
@@ -56,6 +59,7 @@ def get_subcategorias_by_categoria():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/assuntos', methods=['GET'])
+@token_required
 def get_assuntos_by_categoria_subcategoria():
     categoria = request.args.get('categoria')
     subcategoria = request.args.get('subcategoria')
@@ -79,6 +83,7 @@ def get_assuntos_by_categoria_subcategoria():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/sla', methods=['GET'])
+@token_required
 def get_all_slas():
     try:
         slas = VwItsmSla.query.all()
@@ -96,6 +101,7 @@ def get_all_slas():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/hub', methods=['GET'])
+@token_required
 def get_all_hubs():
     try:
         hubs = VwHub.query.all()
@@ -107,6 +113,7 @@ def get_all_hubs():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/unidade', methods=['GET'])
+@token_required
 def get_unidades_by_hub():
     hubs = request.args.get('hub')
     
@@ -132,6 +139,7 @@ def get_unidades_by_hub():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/usuarios-executores', methods=['GET'])
+@token_required
 def get_all_usuarios_executores():
     try:
         filas = VwItsmDestinatarios.query.order_by(VwItsmDestinatarios.nome.asc()).all()
@@ -147,6 +155,7 @@ def get_all_usuarios_executores():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/email-fila', methods=['GET'])
+@token_required
 def get_email_fila():
     id_fila = request.args.get('id_fila')
     unidade = request.args.get('unidade')
@@ -178,6 +187,7 @@ def get_email_fila():
         return jsonify({'error': str(e)}), 500
 
 @tickets_form_blueprint.route('/status', methods=['GET'])
+@token_required
 def get_all_status():
     try:
         status = TbTicketsTasksStatus.query.order_by(TbTicketsTasksStatus.st_decricao.asc()).all()
@@ -189,6 +199,7 @@ def get_all_status():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/status-tickets', methods=['GET'])
+@token_required
 def get_all_status_tickets():
     try:
         status = VwItsmStatusTickets.query.order_by(VwItsmStatusTickets.nome.asc()).all()
@@ -200,6 +211,7 @@ def get_all_status_tickets():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/dominios-email', methods=['GET'])
+@token_required
 def get_all_dominios_email():
     try:
         dominios = VwDominiosEmail.query.all()
@@ -215,6 +227,7 @@ def get_all_dominios_email():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/areas-negocio', methods=['GET'])
+@token_required
 def get_all_areas_negocio():
     try:
         areas_negocio = VwAreasNegocio.query.all()
@@ -226,6 +239,7 @@ def get_all_areas_negocio():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/unidade-novo-usu', methods=['GET'])
+@token_required
 def get_unidades_novo_usu_by_hub():
     hubs = request.args.get('hub')
     
@@ -257,6 +271,7 @@ def get_unidades_novo_usu_by_hub():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/centro-custo', methods=['GET'])
+@token_required
 def get_centro_custo():
     cod_sap = request.args.get('cod_sap')
     
@@ -285,6 +300,7 @@ def get_centro_custo():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/cargo', methods=['GET'])
+@token_required
 def get_all_cargos():
     try:
         cargps = TbCargo.query.order_by(TbCargo.cargo).all()
@@ -296,6 +312,7 @@ def get_all_cargos():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/unidade-mv-tasy', methods=['GET'])
+@token_required
 def get_unidade_mv_tasy():
     categoria = request.args.get('categoria')
     
@@ -318,6 +335,7 @@ def get_unidade_mv_tasy():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/ambiente-sap', methods=['GET'])
+@token_required
 def get_ambiente_sap():
     try:
         ambientes = (TbAmbienteSap.query
@@ -334,6 +352,7 @@ def get_ambiente_sap():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/perfil-sap', methods=['GET'])
+@token_required
 def get_perfil_sap():
     try:
         perfis = (VwPerfisSap.query
@@ -349,6 +368,7 @@ def get_perfil_sap():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/motivo-sap', methods=['GET'])
+@token_required
 def get_motivo_sap():
     try:
         motivos = (VwTicketsMotivoSap.query
@@ -364,6 +384,7 @@ def get_motivo_sap():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/diretoria-sap', methods=['GET'])
+@token_required
 def get_diretoria_sap():
     try:
         areas = (VwAreasDiretoria.query
@@ -379,6 +400,7 @@ def get_diretoria_sap():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/tipo-colaborador', methods=['GET'])
+@token_required
 def get_tipo_colaborador():
     try:
         tipos = (TbTipoColaborador.query
@@ -395,6 +417,7 @@ def get_tipo_colaborador():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/licenca-google', methods=['GET'])
+@token_required
 def get_licenca_google():
     try:
         licencas = (TbLicencaGoogle.query
@@ -410,6 +433,7 @@ def get_licenca_google():
         return jsonify({"error": str(e)}), 500
 
 @tickets_form_blueprint.route('/tipo-usuario', methods=['GET'])
+@token_required
 def get_tipo_usuario():
     try:
         tipos = (TbTipoUsuario.query

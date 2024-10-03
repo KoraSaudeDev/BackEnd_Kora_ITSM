@@ -13,3 +13,4 @@ requests
 Flask-Mail
 pandas
 xlsxwriter
+PyJWT

@@ -1,11 +1,12 @@
 from flask import Blueprint, jsonify, request, current_app
-from flask_mail import Message
-from app import mail
 import threading
+from app.utils.auth_utils import token_required
+from app.utils.email_utils import send_email_async
 
 email_blueprint = Blueprint('email', __name__)
 
 @email_blueprint.route('/send', methods=['POST'])
+@token_required
 def send_email_route():
     data = request.get_json()
 
@@ -32,14 +33,3 @@ def send_email_route():
         return jsonify({"message": "Email enviado com sucesso!"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-def send_email_async(app, to, subject, body, cc=None, bcc=None):
-    with app.app_context():
-        msg = Message(
-            subject=subject,
-            recipients=to,
-            cc=cc if cc else [],
-            bcc=bcc if bcc else [],
-            html=body
-        )
-        mail.send(msg)

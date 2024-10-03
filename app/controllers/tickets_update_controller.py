@@ -12,12 +12,14 @@ from app.models.tb_itsm_log import TbItsmLog
 from app.models.tb_itsm_filtro_ma import TbItsmFiltroMa
 from app.models.tb_itsm_filtro_me import TbItsmFiltroMe
 from app import db
+from app.utils.auth_utils import token_required
 
 load_dotenv()
 
 tickets_update_blueprint = Blueprint('tickets_update', __name__)
 
 @tickets_update_blueprint.route('/<int:cod_fluxo>', methods=['PATCH'])
+@token_required
 def update_ticket(cod_fluxo):
     data = request.json
 
@@ -43,6 +45,7 @@ def update_ticket(cod_fluxo):
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/task/<int:cod_task>', methods=['PATCH'])
+@token_required
 def update_task(cod_task):
     data = request.json
 
@@ -69,6 +72,7 @@ def update_task(cod_task):
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/task', methods=['POST'])
+@token_required
 def create_task():
     data = request.json
 
@@ -91,6 +95,7 @@ def create_task():
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/file', methods=['POST'])
+@token_required
 def create_file():
     data = request.json
 
@@ -113,6 +118,7 @@ def create_file():
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/log', methods=['POST'])
+@token_required
 def create_log():
     data = request.json
 
@@ -132,6 +138,7 @@ def create_log():
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/filtro-ma', methods=['POST'])
+@token_required
 def create_update_filtro_ma():
     user_id = request.args.get('user_id')
     if not user_id:
@@ -160,6 +167,7 @@ def create_update_filtro_ma():
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/delete-filtro-ma', methods=['POST'])
+@token_required
 def delete_filtro_ma():
     user_id = request.args.get('user_id')
     if not user_id:
@@ -180,6 +188,7 @@ def delete_filtro_ma():
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/filtro-me', methods=['POST'])
+@token_required
 def create_update_filtro_me():
     user_id = request.args.get('user_id')
     if not user_id:
@@ -208,6 +217,7 @@ def create_update_filtro_me():
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/delete-filtro-me', methods=['POST'])
+@token_required
 def delete_filtro_me():
     user_id = request.args.get('user_id')
     if not user_id:
@@ -228,6 +238,7 @@ def delete_filtro_me():
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/create-user-google', methods=['POST'])
+@token_required
 def create_google_user():
     data = request.json
 
@@ -247,6 +258,7 @@ def create_google_user():
         return jsonify({"error": str(e)}), 500
 
 @tickets_update_blueprint.route('/sla', methods=['POST'])
+@token_required
 def update_sla_status():
     cod_fluxo = request.args.get('cod_fluxo')
 

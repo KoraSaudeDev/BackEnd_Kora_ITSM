@@ -1,0 +1,30 @@
+from app import db
+
+class TbWFPO(db.Model):
+    __tablename__ = 'tb_wf_po'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, nullable=False)
+    dt_abertura = db.Column(db.DateTime, default=db.func.current_timestamp())
+    executor = db.Column(db.Integer, nullable=True)
+    email = db.Column(db.String(100), nullable=True)
+    nome = db.Column(db.String(100), nullable=True)
+    area = db.Column(db.String(100), nullable=True)
+    hub = db.Column(db.String(15), nullable=True)
+    unidade = db.Column(db.String(100), nullable=True)
+    centro_custo = db.Column(db.String(100), nullable=True)
+    numero_bloco = db.Column(db.String(15), nullable=True)
+    fase = db.Column(db.Integer, nullable=True)
+    tipo_solicitacao = db.Column(db.String(50), nullable=True)
+    grupo_material = db.Column(db.String(100), nullable=True)
+    total_materiais = db.Column(db.Numeric(20, 2), nullable=True)
+    descricao = db.Column(db.Text, nullable=True)
+    observacoes = db.Column(db.Text, nullable=True)
+    motivo_solicitacao = db.Column(db.String(100), nullable=True)
+    id_bionexo = db.Column(db.Integer, nullable=True)
+    crtl_bionexo = db.Column(db.Integer, default=0, nullable=True)
+    id_sap = db.Column(db.String(20), nullable=True)
+    dt_remessa = db.Column(db.DateTime, nullable=True)
+    cod_fornecedor = db.Column(db.String(50), nullable=True)
+    fornecedor = db.Column(db.String(100), nullable=True)
+    dt_inicio_serv = db.Column(db.DateTime, nullable=True)
+    dt_fim_serv = db.Column(db.DateTime, nullable=True)

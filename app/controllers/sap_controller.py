@@ -1,14 +1,17 @@
 from flask import Blueprint, jsonify, request
 from hdbcli import dbapi
 from app.sap_connection import ConnectionSAPHANA
+from app.utils.auth_utils import token_required
 
 sap_blueprint = Blueprint('sap', __name__)
 
 @sap_blueprint.route('/material', methods=['GET'])
+@token_required
 def get_material():
     material = request.args.get('material', '')
     tipo = request.args.get('tipo', '')
     grupo = request.args.get('grupo', '')
+    pesquisa = request.args.get('pesquisa', '')
 
     if not material:
         return jsonify({"error": "Parâmetro 'material' é obrigatório"}), 400
@@ -16,6 +19,8 @@ def get_material():
         return jsonify({"error": "Parâmetro 'tipo' é obrigatório"}), 400
     if not grupo:
         return jsonify({"error": "Parâmetro 'grupo' é obrigatório"}), 400
+    if not pesquisa:
+        return jsonify({"error": "Parâmetro 'pesquisa' é obrigatório"}), 400
     
     connection = ConnectionSAPHANA()
     if not connection:
@@ -29,9 +34,14 @@ def get_material():
             FROM SAPHANADB.MAKT MA
             JOIN SAPHANADB.MBEW MB ON MA.MATNR = MB.MATNR
             JOIN SAPHANADB.MARA MR ON MA.MATNR = MR.MATNR
-            WHERE MA.MAKTX LIKE ? AND MR.MATKL LIKE ?
         """
-        params = [f"%{material.upper()}%", f"%{grupo.upper()}%"]
+        
+        if pesquisa == "cod":
+            base_query += "WHERE MA.MATNR = ? AND MR.MATKL LIKE ?"
+            params = [f"{material.upper()}", f"%{grupo.upper()}%"]
+        else:
+            base_query += "WHERE MA.MAKTX LIKE ? AND MR.MATKL LIKE ?"
+            params = [f"%{material.upper()}%", f"%{grupo.upper()}%"]
         
         if tipo == "Produto":
             base_query += " AND MR.MTART <> 'SERV'"
@@ -54,7 +64,13 @@ def get_material():
         return jsonify({"error": "Erro ao buscar materiais"}), 500
 
 @sap_blueprint.route('/grupo-mercadoria', methods=['GET'])
+@token_required
 def get_grupo_mercadoria():
+    tipo = request.args.get('tipo', '')
+    
+    if not tipo:
+        return jsonify({"error": "Parâmetro 'tipo' é obrigatório"}), 400
+    
     connection = ConnectionSAPHANA()
     if not connection:
         return jsonify({"error": "Não foi possível conectar ao SAP HANA"}), 500
@@ -62,9 +78,10 @@ def get_grupo_mercadoria():
     try:
         cursor = connection.cursor()
         
-        query = """
-            SELECT MATKL FROM SAPHANADB.T023 WHERE BKLAS <> '' AND BKLAS IS NOT NULL ORDER BY MATKL ASC
-        """
+        if tipo == "Produto":
+            query = """SELECT MATKL FROM SAPHANADB.T023 WHERE BKLAS <> '' AND BKLAS IS NOT NULL AND MATKL NOT LIKE '%SERV%' ORDER BY MATKL ASC"""
+        elif tipo == "Serviço":
+            query = """SELECT MATKL FROM SAPHANADB.T023 WHERE BKLAS <> '' AND BKLAS IS NOT NULL AND MATKL LIKE '%SERV%' ORDER BY MATKL ASC"""
         
         cursor.execute(query)
         retorno = cursor.fetchall()
@@ -80,6 +97,7 @@ def get_grupo_mercadoria():
         return jsonify({"error": "Erro ao buscar grupos de mercadorias"}), 500
 
 @sap_blueprint.route('/centro-custo', methods=['GET'])
+@token_required
 def get_centro_custo():
     empresa = request.args.get('empresa', '')
 
@@ -114,8 +132,15 @@ def get_centro_custo():
         return jsonify({"error": "Erro ao buscar centros de custos"}), 500
     
 @sap_blueprint.route('/fornecedor', methods=['GET'])
+@token_required
 def get_fornecedor():
     fornecedor = request.args.get('fornecedor', '')
+    pesquisa = request.args.get('pesquisa', '')
+    
+    if not fornecedor:
+        return jsonify({"error": "Parâmetro 'fornecedor' é obrigatório"}), 400
+    if not pesquisa:
+        return jsonify({"error": "Parâmetro 'pesquisa' é obrigatório"}), 400
     
     connection = ConnectionSAPHANA()
     if not connection:
@@ -124,10 +149,12 @@ def get_fornecedor():
     try:
         cursor = connection.cursor()
         
-        if not fornecedor:
-            query = f"""SELECT DISTINCT lfa.LIFNR, lfa.NAME1  FROM SAPHANADB.LFA1 lfa LIMIT 40"""
+        query = f"""SELECT DISTINCT lfa.LIFNR, lfa.NAME1  FROM SAPHANADB.LFA1 lfa"""
+        
+        if pesquisa == 'cod':
+            query += f" WHERE lfa.LIFNR = '{fornecedor.upper()}'"
         else:
-            query = f"""SELECT DISTINCT lfa.LIFNR, lfa.NAME1  FROM SAPHANADB.LFA1 lfa WHERE lfa.NAME1 LIKE '%{fornecedor.upper()}%' LIMIT 40"""
+            query += f" WHERE lfa.NAME1 LIKE '%{fornecedor.upper()}%' LIMIT 40"
         
         cursor.execute(query)
         retorno = cursor.fetchall()
