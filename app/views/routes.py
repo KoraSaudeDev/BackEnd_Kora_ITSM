@@ -11,6 +11,7 @@ from app.controllers.menu_controller import menu_blueprint
 from app.controllers.sap_controller import sap_blueprint
 from app.controllers.wf_po_controller import wf_po_blueprint
 from app.controllers.wf_po_form_controller import wf_po_form_blueprint
+from app.controllers.wf_po_update_controller import wf_po_update_blueprint
 
 main_blueprint = Blueprint('main', __name__)
 
@@ -26,3 +27,4 @@ main_blueprint.register_blueprint(menu_blueprint, url_prefix='/menu')
 main_blueprint.register_blueprint(sap_blueprint, url_prefix='/sap')
 main_blueprint.register_blueprint(wf_po_blueprint, url_prefix='/wf-po')
 main_blueprint.register_blueprint(wf_po_form_blueprint, url_prefix='/wf-po/form')
+main_blueprint.register_blueprint(wf_po_update_blueprint, url_prefix='/wf-po/update')

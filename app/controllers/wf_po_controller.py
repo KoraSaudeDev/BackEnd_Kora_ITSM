@@ -17,7 +17,7 @@ def get_meus_tickets():
     per_page = request.args.get('per_page', 10, type=int)
 
     try:
-        query = VwWFPO.query.filter(VwWFPO.email == email)
+        query = VwWFPO.query.filter(VwWFPO.email == email).order_by(VwWFPO.id.desc())
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -25,31 +25,16 @@ def get_meus_tickets():
             {
                 "id": ticket.id,
                 "dt_abertura": ticket.dt_abertura,
-                "id_executor": ticket.id_executor,
                 "executor": ticket.executor,
                 "email": ticket.email,
                 "nome": ticket.nome,
-                "area": ticket.area,
                 "hub": ticket.hub,
                 "unidade": ticket.unidade,
                 "centro_custo": ticket.centro_custo,
                 "numero_bloco": ticket.numero_bloco,
-                "id_fase": ticket.id_fase,
                 "fase": ticket.fase,
                 "tipo_solicitacao": ticket.tipo_solicitacao,
-                "grupo_material": ticket.grupo_material,
-                "total_materiais": str(ticket.total_materiais),
-                "descricao": ticket.descricao,
-                "observacoes": ticket.observacoes,
-                "motivo_solicitacao": ticket.motivo_solicitacao,
-                "id_bionexo": ticket.id_bionexo,
-                "crtl_bionexo": ticket.crtl_bionexo,
-                "id_sap": ticket.id_sap,
-                "dt_remessa": ticket.dt_remessa,
-                "cod_fornecedor": ticket.cod_fornecedor,
-                "fornecedor": ticket.fornecedor,
-                "dt_inicio_serv": ticket.dt_inicio_serv,
-                "dt_fim_serv": ticket.dt_fim_serv
+                "grupo_material": ticket.grupo_material
             }
             for ticket in paginated_tickets.items
         ]
@@ -71,12 +56,105 @@ def get_all():
     per_page = request.args.get('per_page', 10, type=int)
 
     try:
-        query = VwWFPO.query
+        query = VwWFPO.query.order_by(VwWFPO.id.desc())
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
         tickets_list = [
             {
+                "id": ticket.id,
+                "dt_abertura": ticket.dt_abertura,
+                "executor": ticket.executor,
+                "email": ticket.email,
+                "nome": ticket.nome,
+                "hub": ticket.hub,
+                "unidade": ticket.unidade,
+                "centro_custo": ticket.centro_custo,
+                "numero_bloco": ticket.numero_bloco,
+                "fase": ticket.fase,
+                "tipo_solicitacao": ticket.tipo_solicitacao,
+                "grupo_material": ticket.grupo_material
+            }
+            for ticket in paginated_tickets.items
+        ]
+
+        return jsonify({
+            "page": paginated_tickets.page,
+            "pages": paginated_tickets.pages,
+            "total_items": paginated_tickets.total,
+            "items_per_page": paginated_tickets.per_page,
+            "tickets": tickets_list
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@wf_po_blueprint.route('/aprovacoes', methods=['GET'])
+@token_required
+def get_aprovacoes():
+    grupos = request.args.get('grupos')
+    if not grupos:
+        return jsonify({"error": "grupos parameter is required"}), 400
+    
+    email = request.args.get('email')
+    if not email:
+        return jsonify({"error": "email parameter is required"}), 400
+    
+    grupo_ids = [int(g.strip()) for g in grupos.split(',')]
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+
+    try:
+        query = VwWFPO.query.filter(VwWFPO.id_executor.in_(grupo_ids))
+        
+        query = query.union(
+            VwWFPO.query.filter(VwWFPO.id_executor == 1, VwWFPO.email == email)
+        )
+        
+        query = query.order_by(VwWFPO.id.desc())
+
+        paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
+
+        tickets_list = [
+            {
+                "id": ticket.id,
+                "dt_abertura": ticket.dt_abertura,
+                "executor": ticket.executor,
+                "email": ticket.email,
+                "nome": ticket.nome,
+                "hub": ticket.hub,
+                "unidade": ticket.unidade,
+                "centro_custo": ticket.centro_custo,
+                "numero_bloco": ticket.numero_bloco,
+                "fase": ticket.fase,
+                "tipo_solicitacao": ticket.tipo_solicitacao,
+                "grupo_material": ticket.grupo_material
+            }
+            for ticket in paginated_tickets.items
+        ]
+
+        return jsonify({
+            "page": paginated_tickets.page,
+            "pages": paginated_tickets.pages,
+            "total_items": paginated_tickets.total,
+            "items_per_page": paginated_tickets.per_page,
+            "tickets": tickets_list
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@wf_po_blueprint.route('/wf-po', methods=['GET'])
+@token_required
+def get_requisicao():
+    id = request.args.get('id')
+    if not id:
+        return jsonify({"error": "id parameter is required"}), 400
+
+    try:
+        ticket = VwWFPO.query.filter_by(id=id).first()
+        
+        if ticket:
+            result = {
                 "id": ticket.id,
                 "dt_abertura": ticket.dt_abertura,
                 "id_executor": ticket.id_executor,
@@ -105,15 +183,7 @@ def get_all():
                 "dt_inicio_serv": ticket.dt_inicio_serv,
                 "dt_fim_serv": ticket.dt_fim_serv
             }
-            for ticket in paginated_tickets.items
-        ]
 
-        return jsonify({
-            "page": paginated_tickets.page,
-            "pages": paginated_tickets.pages,
-            "total_items": paginated_tickets.total,
-            "items_per_page": paginated_tickets.per_page,
-            "tickets": tickets_list
-        }), 200
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
