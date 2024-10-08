@@ -34,14 +34,14 @@ def create_app():
         origin = request.headers.get('Origin')
         user_agent = request.headers.get('User-Agent', '').lower()
         
-        allowed_ip = '10.188.233.36'
+        allowed_ip = '192.168.80.250'
         
         if request.headers.getlist("X-Forwarded-For"):
             request_ip = request.headers.getlist("X-Forwarded-For")[0]
         else:
             request_ip = request.remote_addr
         
-        print("REQUEST IP",request_ip, request.headers)
+        print("REQUEST IP", request_ip, request.headers)
 
         disallowed_agents = ['postman', 'insomnia', 'soapui']
 
