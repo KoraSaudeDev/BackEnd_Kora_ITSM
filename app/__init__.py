@@ -12,7 +12,11 @@ ALLOWED_ORIGINS = [
     "https://qashelper.korasaude.com.br"
 ]
 
-ALLOWED_IPS = ["127.0.0.1", "172.18.0.1"]
+ALLOWED_IPS = [
+    "127.0.0.1", #IP que roda no Flask localmente
+    "172.18.0.1", #IP rede docker - PH
+    "172.21.0.1", #IP rede docker - Hugo 
+]
 
 def create_app():
     app = Flask(__name__)
