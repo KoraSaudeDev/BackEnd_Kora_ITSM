@@ -27,14 +27,14 @@ def create_app():
     def log_request_info():
         x_user_email = request.headers.get('X-User-Email', 'N/A')
         referer = request.headers.get('Referer', 'N/A')
-        print(f"{request.path} - X-User-Email: {x_user_email} - Referer: {referer}")
+
+        client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+
+        print(f"{request.path} - X-User-Email: {x_user_email} - Referer: {referer} - Client IP: {client_ip}")
 
         origin = request.headers.get('Origin')
-        if origin not in ALLOWED_ORIGINS:
-            client_ip = request.remote_addr
-
-            if not any(ip_in_subnet(client_ip, subnet) for subnet in ALLOWED_VPN_IPS):
-                abort(403)
+        if origin not in ALLOWED_ORIGINS and client_ip not in ALLOWED_VPN_IPS:
+            abort(403)
 
     from app.views.routes import main_blueprint
     app.register_blueprint(main_blueprint)
