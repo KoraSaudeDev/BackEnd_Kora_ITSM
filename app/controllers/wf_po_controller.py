@@ -2,6 +2,10 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import or_
 from app import db
 from app.models.vw_wf_po import VwWFPO
+from app.models.vw_wf_po_materiais import VwWFPOMateriais
+from app.models.vw_wf_po_aprovacoes import VwWFPOAprovacoes
+from app.models.vw_wf_po_task import VwWFPOTasks
+from app.models.vw_wf_po_bionexo import VwWFPOBionexo
 from app.utils.auth_utils import token_required
 
 wf_po_blueprint = Blueprint('wf_po', __name__)
@@ -185,5 +189,136 @@ def get_requisicao():
             }
 
         return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@wf_po_blueprint.route('/wf-po-materiais', methods=['GET'])
+@token_required
+def get_materiais():
+    referencia_id = request.args.get('referencia_id')
+    if not referencia_id:
+        return jsonify({"error": "referencia_id parameter is required"}), 400
+
+    try:
+        materiais = VwWFPOMateriais.query.filter_by(referencia_id=referencia_id).all()
+        
+        if materiais:
+            result = [{
+                "id": item.id,
+                "referencia_id": item.referencia_id,
+                "codigo": item.codigo,
+                "grupo": item.grupo,
+                "material": item.material,
+                "qtd": item.qtd,
+                "preco": str(item.preco),
+                "total": str(item.total),
+                "id_status": item.id_status,
+                "status": item.status,
+                "motivo_reprova": item.motivo_reprova,
+                "cnpj_fornecedor": item.cnpj_fornecedor
+            } for item in materiais]
+
+            return jsonify(result), 200
+        return jsonify({"error": "No records found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@wf_po_blueprint.route('/wf-po-aprovacoes', methods=['GET'])
+@token_required
+def get_hist_aprovacoes():
+    referencia_id = request.args.get('referencia_id')
+    if not referencia_id:
+        return jsonify({"error": "referencia_id parameter is required"}), 400
+
+    try:
+        aprovacoes = VwWFPOAprovacoes.query.filter_by(referencia_id=referencia_id).all()
+        
+        if aprovacoes:
+            result = [{
+                "id": item.id,
+                "referencia_id": item.referencia_id,
+                "codigo": item.codigo,
+                "grupo": item.grupo,
+                "material": item.material,
+                "qtd": item.qtd,
+                "preco": str(item.preco),
+                "total": str(item.total),
+                "id_status": item.id_status,
+                "status": item.status,
+                "id_executor": item.id_executor,
+                "executor": item.executor,
+                "aprovador": item.aprovador,
+                "motivo_reprova": item.motivo_reprova
+            } for item in aprovacoes]
+
+            return jsonify(result), 200
+        return jsonify({"error": "No records found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@wf_po_blueprint.route('/wf-po-tasks', methods=['GET'])
+@token_required
+def get_tasks():
+    referencia_id = request.args.get('referencia_id')
+    if not referencia_id:
+        return jsonify({"error": "referencia_id parameter is required"}), 400
+
+    try:
+        tasks = VwWFPOTasks.query.filter_by(referencia_id=referencia_id).all()
+        
+        if tasks:
+            result = [{
+                "id": item.id,
+                "referencia_id": item.referencia_id,
+                "id_fase": item.id_fase,
+                "fase": item.fase,
+                "id_executor": item.id_executor,
+                "executor": item.executor,
+                "nome_executor": item.nome_executor,
+                "numero_bloco": item.numero_bloco,
+                "inicio": item.inicio,
+                "fim": item.fim,
+                "motivo_reprova": item.motivo_reprova
+            } for item in tasks]
+
+            return jsonify(result), 200
+        return jsonify({"error": "No records found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@wf_po_blueprint.route('/wf-po-bionexo', methods=['GET'])
+@token_required
+def get_bionexo():
+    referencia_id = request.args.get('referencia_id')
+    if not referencia_id:
+        return jsonify({"error": "referencia_id parameter is required"}), 400
+
+    try:
+        bionexo = VwWFPOBionexo.query.filter_by(referencia_id=referencia_id).all()
+        
+        if bionexo:
+            result = [{
+                "id": item.id,
+                "referencia_id": item.referencia_id,
+                "cnpj": item.cnpj,
+                "razao_social": item.razao_social,
+                "faturamento_min": str(item.faturamento_min),
+                "prazo_entrega": item.prazo_entrega,
+                "validade_proposta": item.validade_proposta,
+                "id_forma_pag": item.id_forma_pag,
+                "frete": item.frete,
+                "observacao": item.observacao,
+                "cod_produto": item.cod_produto,
+                "quantidade": item.quantidade,
+                "fabricante": item.fabricante,
+                "embalagem": item.embalagem,
+                "preco_unitario": str(item.preco_unitario),
+                "preco_total": str(item.preco_total),
+                "comentario": item.comentario,
+                "inserido_em": item.inserido_em
+            } for item in bionexo]
+
+            return jsonify(result), 200
+        return jsonify({"error": "No records found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500

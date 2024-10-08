@@ -11,5 +11,5 @@ class TbWFPOFase(db.Model):
     n_alcada_limit = db.Column(db.Integer, nullable=True)
     ds_tipo_compra = db.Column(db.String(50), nullable=True)
     ds_tipo_solic = db.Column(db.String(50), nullable=True)
-    isNextIntegraBio = db.Column(db.Integer, nullable=True)
-    isNextIntegraSAP = db.Column(db.Integer, nullable=True)
+    isIntegraBio = db.Column(db.Integer, nullable=True)
+    isIntegraSAP = db.Column(db.Integer, nullable=True)

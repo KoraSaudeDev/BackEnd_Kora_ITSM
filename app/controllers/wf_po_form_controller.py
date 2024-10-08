@@ -71,8 +71,10 @@ def buscar_fases():
         return jsonify({"error": "Parâmetro 'valor' deve conter apenas números"}), 400  
 
     tipo = None
-    if "S/" in bloco: tipo = "Serviço"
-    elif "P/" in bloco: tipo = "Produto"
+    if "S/" in bloco: 
+        tipo = "Serviço"
+    elif "P/" in bloco: 
+        tipo = "Produto"
     else: 
         return jsonify({"error": "Parâmetro 'bloco' precisa de um valor válido [P/1, P/2, P/3, P/CORP, S/1, S/CORP]"}), 400
     
@@ -80,11 +82,12 @@ def buscar_fases():
         query = db.session.query(
             TbWFPOFase.n_ordem,
             TbWFPOFase.id_grupo,
-            TbWFPOFase.n_alcada_limit
+            TbWFPOFase.n_alcada_limit,
+            TbWFPOFase.isIntegraBio,
+            TbWFPOFase.isIntegraSAP
         )
         
         if not fase:
-            # Filtrando sem o parâmetro de 'fase'
             query = query.filter(
                 (TbWFPOFase.n_bloco == bloco) & 
                 ((TbWFPOFase.n_alcada_limit <= valor) |
@@ -98,7 +101,9 @@ def buscar_fases():
                 db.session.query(
                     TbWFPOFase.n_ordem,
                     TbWFPOFase.id_grupo,
-                    TbWFPOFase.n_alcada_limit
+                    TbWFPOFase.n_alcada_limit,
+                    TbWFPOFase.isIntegraBio,
+                    TbWFPOFase.isIntegraSAP
                 ).filter(
                     TbWFPOFase.n_bloco.is_(None),
                     TbWFPOFase.n_ordem > 14,
@@ -108,7 +113,9 @@ def buscar_fases():
                 db.session.query(
                     TbWFPOFase.n_ordem,
                     TbWFPOFase.id_grupo,
-                    TbWFPOFase.n_alcada_limit
+                    TbWFPOFase.n_alcada_limit,
+                    TbWFPOFase.isIntegraBio,
+                    TbWFPOFase.isIntegraSAP
                 ).filter(
                     TbWFPOFase.n_bloco.is_(None),
                     TbWFPOFase.n_alcada_limit.isnot(None),
@@ -128,7 +135,6 @@ def buscar_fases():
             if not is_number(fase):
                 return jsonify({"error": "Parâmetro 'fase' deve conter apenas números"}), 400
             
-            # Filtrando com o parâmetro 'fase'
             query = query.filter(
                 (TbWFPOFase.n_bloco == bloco) & 
                 ((TbWFPOFase.n_alcada_limit <= valor) |
@@ -143,7 +149,9 @@ def buscar_fases():
                 db.session.query(
                     TbWFPOFase.n_ordem,
                     TbWFPOFase.id_grupo,
-                    TbWFPOFase.n_alcada_limit
+                    TbWFPOFase.n_alcada_limit,
+                    TbWFPOFase.isIntegraBio,
+                    TbWFPOFase.isIntegraSAP
                 ).filter(
                     TbWFPOFase.n_bloco.is_(None),
                     TbWFPOFase.n_ordem > fase,
@@ -153,7 +161,9 @@ def buscar_fases():
                 db.session.query(
                     TbWFPOFase.n_ordem,
                     TbWFPOFase.id_grupo,
-                    TbWFPOFase.n_alcada_limit
+                    TbWFPOFase.n_alcada_limit,
+                    TbWFPOFase.isIntegraBio,
+                    TbWFPOFase.isIntegraSAP
                 ).filter(
                     TbWFPOFase.n_bloco.is_(None),
                     TbWFPOFase.n_alcada_limit.isnot(None),
@@ -173,7 +183,7 @@ def buscar_fases():
 
         fases = query.order_by(TbWFPOFase.n_ordem.asc()).all()
 
-        fases_list = [{"id_fase": row[0], "id_grupo": row[1], "valor_limite_alcada": row[2]} for row in fases]
+        fases_list = [{"id_fase": row[0], "id_grupo": row[1], "valor_limite_alcada": row[2], "isIntegraBio": row[3], "isIntegraSAP": row[4]} for row in fases]
 
         return jsonify(fases_list), 200
     except Exception as e:
