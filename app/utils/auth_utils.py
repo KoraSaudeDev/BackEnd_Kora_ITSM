@@ -2,6 +2,9 @@ from functools import wraps
 from flask import request, jsonify
 import jwt
 import requests
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 
 ALLOWED_DOMAINS = [
     "angiocardis.com.br", "encore.com.br", "gastroclinicahospital.com.br", "grupooto.com.br", 
@@ -21,6 +24,13 @@ ALLOWED_DOMAINS = [
     "idm.saofranciscohospital.com.br", "cadim.com.br", "seg.korasaude.com.br", "a2f.com.br", 
     "megawork.com", "mv.com.br", "qinetwork.com.br"
 ]
+
+def load_rsa_key_from_jwk(jwk):
+    public_key_numbers = rsa.RSAPublicNumbers(
+        e=int.from_bytes(jwt.utils.base64url_decode(jwk['e']), byteorder='big'),
+        n=int.from_bytes(jwt.utils.base64url_decode(jwk['n']), byteorder='big')
+    )
+    return public_key_numbers.public_key(default_backend())
 
 def get_google_public_keys():
     google_cert_url = "https://www.googleapis.com/oauth2/v3/certs"
@@ -53,7 +63,7 @@ def token_required(f):
             public_key = None
             for key in public_keys['keys']:
                 if key['kid'] == kid:
-                    public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
+                    public_key = load_rsa_key_from_jwk(key)
                     break
 
             if not public_key:

@@ -14,3 +14,4 @@ Flask-Mail
 pandas
 xlsxwriter
 PyJWT
+cryptography
