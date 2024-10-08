@@ -12,7 +12,7 @@ ALLOWED_ORIGINS = [
     "https://qashelper.korasaude.com.br"
 ]
 
-ALLOWED_VPN_IPS = ["192.168.80.0/24", "10.188.233.36", "127.0.0.1"]
+ALLOWED_IPS = ["127.0.0.1", "172.18.0.1"]
 
 def create_app():
     app = Flask(__name__)
@@ -33,14 +33,10 @@ def create_app():
         print(f"{request.path} - X-User-Email: {x_user_email} - Referer: {referer} - Client IP: {client_ip}")
 
         origin = request.headers.get('Origin')
-        if origin not in ALLOWED_ORIGINS and client_ip not in ALLOWED_VPN_IPS:
+        if origin not in ALLOWED_ORIGINS and client_ip not in ALLOWED_IPS:
             abort(403)
 
     from app.views.routes import main_blueprint
     app.register_blueprint(main_blueprint)
 
     return app
-
-def ip_in_subnet(ip, subnet):
-    from ipaddress import ip_address, ip_network
-    return ip_address(ip) in ip_network(subnet)
