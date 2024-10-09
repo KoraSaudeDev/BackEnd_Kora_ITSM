@@ -52,10 +52,10 @@ def upload_file_local():
         else:
             gdrive_folder = GDRIVE_FOLDERS[upload_type]["files"]
         
-        response = jsonify({'message': 'Upload iniciado com sucesso!', 'filename': f"{gdrive_folder}/{new_filename}"})
+        response = jsonify({'message': 'Upload iniciado com sucesso!', 'filename': f"{gdrive_folder['name']}/{new_filename}"})
         response.status_code = 202
 
-        threading.Thread(target=async_upload, args=(file_path, new_filename, gdrive_folder)).start()
+        threading.Thread(target=async_upload, args=(file_path, new_filename, gdrive_folder['name'], upload_type, is_image)).start()
 
         return response
     except Exception as e:
