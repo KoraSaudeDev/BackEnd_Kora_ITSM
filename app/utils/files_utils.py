@@ -128,13 +128,13 @@ def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image):
         else:
             print("Falha ao fazer upload do arquivo para o Google Drive. Detalhes:", gdrive_response.get('error'))
             subject = "Erro no upload para o Google Drive"
-            recipients = ["pedro.magalhaes@korasaude.com.br"]
+            recipients = ["corporativo.governacati@korasaude.com.br"]
             body = f"Ocorreu um erro ao fazer o upload do arquivo {file_path}\nPasta: {gdrive_folder}\nDetalhes: {gdrive_response.get('error')}"
             send_error_email_with_attachment(subject, recipients, body, file_path)
     except Exception as e:
         print(f"An error occurred while uploading the file: {e}")
         subject = "Erro inesperado no upload para o Google Drive"
-        recipients = ["pedro.magalhaes@korasaude.com.br"]
+        recipients = ["corporativo.governacati@korasaude.com.br"]
         body = f"Ocorreu um erro inesperado ao fazer o upload do arquivo {file_path}\nPasta: {gdrive_folder}\nDetalhes: {e}"
         send_error_email_with_attachment(subject, recipients, body, file_path)
         
