@@ -87,7 +87,6 @@ def get_id_from_path(folder_id, file_path):
         return None
 
 def upload_file_gdrive(path_local, name, path_google, folder_type, is_image):
-    raise Exception("Simulated upload failure")
     try:
         if not os.path.exists(path_local):
             return {"error": f"File not found: {path_local}"}
