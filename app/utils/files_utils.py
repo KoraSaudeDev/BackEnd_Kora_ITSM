@@ -135,7 +135,7 @@ def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image, 
             except Exception as e:
                 print(f"Erro ao remover o arquivo local: {file_path}. Detalhes: {e}")
         else:
-            print(f"Falha ao fazer upload do arquivo para o Google Drive na tentativa {attempt}. Detalhes:", gdrive_response.get('error'))
+            print(f"Falha ao fazer upload do arquivo para o Google Drive na tentativa {attempt}. Detalhes:", gdrive_response.get('details'))
             
             if attempt < MAX_RETRIES:
                 attempt += 1
@@ -150,7 +150,7 @@ def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image, 
             else:
                 subject = "Erro no upload para o Google Drive após várias tentativas"
                 recipients = ["pedro.magalhaes@korasaude.com.br"]
-                body = f"Falha ao fazer o upload do arquivo {file_path} após {MAX_RETRIES} tentativas.\nÚltimo erro: {gdrive_response.get('error')}\nArquivo anexado ao e-mail."
+                body = f"Falha ao fazer o upload do arquivo {file_path} após {MAX_RETRIES} tentativas.\nÚltimo erro: {gdrive_response.get('details')}\nArquivo anexado ao e-mail."
                 send_error_email_with_attachment(subject, recipients, body, file_path)
     except Exception as e:
         print(f"An error occurred while uploading the file on attempt {attempt}: {e}")
