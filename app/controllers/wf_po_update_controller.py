@@ -111,3 +111,84 @@ def create_bionexo_log():
     except SQLAlchemyError as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
+
+@wf_po_update_blueprint.route('/wf-po/<int:id>', methods=['PATCH'])
+@token_required
+def update_requisicao(id):
+    data = request.json
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        req = TbWFPO.query.get(id)
+        if not req:
+            return jsonify({"error": "Requisição WF-PO not found"}), 404
+
+        for key, value in data.items():
+            if hasattr(req, key):
+                setattr(req, key, value)
+            else:
+                return jsonify({"error": f"Invalid field: {key}"}), 400
+
+        db.session.commit()
+
+        return jsonify({"message": "Requisição WF-PO updated successfully"}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@wf_po_update_blueprint.route('/wf-po-material/<int:id>', methods=['PATCH'])
+@token_required
+def update_materiais(id):
+    data = request.json
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        material = TbWFPOMateriais.query.get(id)
+        if not material:
+            return jsonify({"error": "Material not found"}), 404
+
+        for key, value in data.items():
+            if hasattr(material, key):
+                setattr(material, key, value)
+            else:
+                return jsonify({"error": f"Invalid field: {key}"}), 400
+
+        db.session.commit()
+
+        return jsonify({"message": "Material updated successfully"}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@wf_po_update_blueprint.route('/wf-po-task/<int:id>', methods=['PATCH'])
+@token_required
+def update_wf_po_task(id):
+    data = request.json
+
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    try:
+        task = TbWFPOTasks.query.get(id)
+        if not task:
+            return jsonify({"error": "Task not found"}), 404
+
+        for key, value in data.items():
+            if hasattr(task, key):
+                setattr(task, key, value)
+            else:
+                return jsonify({"error": f"Invalid field: {key}"}), 400
+
+        db.session.commit()
+
+        return jsonify({"message": "Task updated successfully"}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
