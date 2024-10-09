@@ -18,7 +18,7 @@ TICKETS_FOLDER_ID = getenv('FOLDER_ANEXOS_TICKETS_ID')
 SERVICE_ACCOUNT_FILE = getenv('SERVICE_ACCOUNT_FILE')
 SCOPES = ['https://www.googleapis.com/auth/drive']
 MAX_RETRIES = 10
-INITIAL_DELAY = 10
+INITIAL_DELAY = 5
 
 credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 drive_service = build('drive', 'v3', credentials=credentials)
@@ -87,6 +87,7 @@ def get_id_from_path(folder_id, file_path):
         return None
 
 def upload_file_gdrive(path_local, name, path_google, folder_type, is_image):
+    raise Exception("Simulated upload failure")
     try:
         if not os.path.exists(path_local):
             return {"error": f"File not found: {path_local}"}
@@ -135,7 +136,7 @@ def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image, 
             except Exception as e:
                 print(f"Erro ao remover o arquivo local: {file_path}. Detalhes: {e}")
         else:
-            print(f"Falha ao fazer upload do arquivo para o Google Drive na tentativa {attempt}. Detalhes:", gdrive_response.get('details'))
+            print(f"Falha ao fazer upload do arquivo para o Google Drive na tentativa {attempt+1}. Detalhes:", gdrive_response.get('details'))
             
             if attempt < MAX_RETRIES:
                 attempt += 1
@@ -143,8 +144,9 @@ def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image, 
                 print(f"Tentativa {attempt} falhou. Arquivo: {file_path}. Esperando {delay} segundos antes de tentar novamente...")
                 time.sleep(delay)
                 
-                threading.Thread(
-                    target=async_upload, 
+                threading.Timer(
+                    delay,
+                    async_upload, 
                     args=(file_path, new_filename, gdrive_folder, folder_type, is_image, attempt, delay * 2)
                 ).start()
             else:
@@ -153,14 +155,15 @@ def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image, 
                 body = f"Falha ao fazer o upload do arquivo {file_path} após {MAX_RETRIES} tentativas.\nÚltimo erro: {gdrive_response.get('details')}\nArquivo anexado ao e-mail."
                 send_error_email_with_attachment(subject, recipients, body, file_path)
     except Exception as e:
-        print(f"An error occurred while uploading the file on attempt {attempt}: {e}")
+        print(f"An error occurred while uploading the file on attempt {attempt+1}: {e}")
         if attempt < MAX_RETRIES:
             attempt += 1
             print(f"Tentativa {attempt} falhou devido a erro inesperado. Arquivo: {file_path}. Esperando {delay} segundos antes de tentar novamente...")
             time.sleep(delay)
             
-            threading.Thread(
-                target=async_upload, 
+            threading.Timer(
+                delay,
+                async_upload, 
                 args=(file_path, new_filename, gdrive_folder, folder_type, is_image, attempt, delay * 2)
             ).start()
         else:
