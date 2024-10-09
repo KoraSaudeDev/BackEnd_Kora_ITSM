@@ -157,6 +157,7 @@ def get_requisicao():
     try:
         ticket = VwWFPO.query.filter_by(id=id).first()
         
+        result = {}
         if ticket:
             result = {
                 "id": ticket.id,
@@ -202,24 +203,22 @@ def get_materiais():
     try:
         materiais = VwWFPOMateriais.query.filter_by(referencia_id=referencia_id).all()
         
-        if materiais:
-            result = [{
-                "id": item.id,
-                "referencia_id": item.referencia_id,
-                "codigo": item.codigo,
-                "grupo": item.grupo,
-                "material": item.material,
-                "qtd": item.qtd,
-                "preco": str(item.preco),
-                "total": str(item.total),
-                "id_status": item.id_status,
-                "status": item.status,
-                "motivo_reprova": item.motivo_reprova,
-                "cnpj_fornecedor": item.cnpj_fornecedor
-            } for item in materiais]
+        result = [{
+            "id": item.id,
+            "referencia_id": item.referencia_id,
+            "codigo": item.codigo,
+            "grupo": item.grupo,
+            "material": item.material,
+            "qtd": item.qtd,
+            "preco": str(item.preco),
+            "total": str(item.total),
+            "id_status": item.id_status,
+            "status": item.status,
+            "motivo_reprova": item.motivo_reprova,
+            "cnpj_fornecedor": item.cnpj_fornecedor
+        } for item in materiais]
 
-            return jsonify(result), 200
-        return jsonify({"error": "No records found"}), 404
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -233,26 +232,24 @@ def get_hist_aprovacoes():
     try:
         aprovacoes = VwWFPOAprovacoes.query.filter_by(referencia_id=referencia_id).all()
         
-        if aprovacoes:
-            result = [{
-                "id": item.id,
-                "referencia_id": item.referencia_id,
-                "codigo": item.codigo,
-                "grupo": item.grupo,
-                "material": item.material,
-                "qtd": item.qtd,
-                "preco": str(item.preco),
-                "total": str(item.total),
-                "id_status": item.id_status,
-                "status": item.status,
-                "id_executor": item.id_executor,
-                "executor": item.executor,
-                "aprovador": item.aprovador,
-                "motivo_reprova": item.motivo_reprova
-            } for item in aprovacoes]
+        result = [{
+            "id": item.id,
+            "referencia_id": item.referencia_id,
+            "codigo": item.codigo,
+            "grupo": item.grupo,
+            "material": item.material,
+            "qtd": item.qtd,
+            "preco": str(item.preco),
+            "total": str(item.total),
+            "id_status": item.id_status,
+            "status": item.status,
+            "id_executor": item.id_executor,
+            "executor": item.executor,
+            "aprovador": item.aprovador,
+            "motivo_reprova": item.motivo_reprova
+        } for item in aprovacoes]
 
-            return jsonify(result), 200
-        return jsonify({"error": "No records found"}), 404
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -266,23 +263,21 @@ def get_tasks():
     try:
         tasks = VwWFPOTasks.query.filter_by(referencia_id=referencia_id).all()
         
-        if tasks:
-            result = [{
-                "id": item.id,
-                "referencia_id": item.referencia_id,
-                "id_fase": item.id_fase,
-                "fase": item.fase,
-                "id_executor": item.id_executor,
-                "executor": item.executor,
-                "nome_executor": item.nome_executor,
-                "numero_bloco": item.numero_bloco,
-                "inicio": item.inicio,
-                "fim": item.fim,
-                "motivo_reprova": item.motivo_reprova
-            } for item in tasks]
+        result = [{
+            "id": item.id,
+            "referencia_id": item.referencia_id,
+            "id_fase": item.id_fase,
+            "fase": item.fase,
+            "id_executor": item.id_executor,
+            "executor": item.executor,
+            "nome_executor": item.nome_executor,
+            "numero_bloco": item.numero_bloco,
+            "inicio": item.inicio,
+            "fim": item.fim,
+            "motivo_reprova": item.motivo_reprova
+        } for item in tasks]
 
-            return jsonify(result), 200
-        return jsonify({"error": "No records found"}), 404
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -296,29 +291,27 @@ def get_bionexo():
     try:
         bionexo = VwWFPOBionexo.query.filter_by(referencia_id=referencia_id).all()
         
-        if bionexo:
-            result = [{
-                "id": item.id,
-                "referencia_id": item.referencia_id,
-                "cnpj": item.cnpj,
-                "razao_social": item.razao_social,
-                "faturamento_min": str(item.faturamento_min),
-                "prazo_entrega": item.prazo_entrega,
-                "validade_proposta": item.validade_proposta,
-                "id_forma_pag": item.id_forma_pag,
-                "frete": item.frete,
-                "observacao": item.observacao,
-                "cod_produto": item.cod_produto,
-                "quantidade": item.quantidade,
-                "fabricante": item.fabricante,
-                "embalagem": item.embalagem,
-                "preco_unitario": str(item.preco_unitario),
-                "preco_total": str(item.preco_total),
-                "comentario": item.comentario,
-                "inserido_em": item.inserido_em
-            } for item in bionexo]
+        result = [{
+            "id": item.id,
+            "referencia_id": item.referencia_id,
+            "cnpj": item.cnpj,
+            "razao_social": item.razao_social,
+            "faturamento_min": str(item.faturamento_min),
+            "prazo_entrega": item.prazo_entrega,
+            "validade_proposta": item.validade_proposta,
+            "id_forma_pag": item.id_forma_pag,
+            "frete": item.frete,
+            "observacao": item.observacao,
+            "cod_produto": item.cod_produto,
+            "quantidade": item.quantidade,
+            "fabricante": item.fabricante,
+            "embalagem": item.embalagem,
+            "preco_unitario": str(item.preco_unitario),
+            "preco_total": str(item.preco_total),
+            "comentario": item.comentario,
+            "inserido_em": item.inserido_em
+        } for item in bionexo]
 
-            return jsonify(result), 200
-        return jsonify({"error": "No records found"}), 404
+        return jsonify(result), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
