@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 from app.utils.auth_utils import token_required
 from flask_mail import Message
 from app import mail
+import time
 
 load_dotenv()
 file_lock = threading.Lock()
@@ -16,6 +17,8 @@ file_lock = threading.Lock()
 TICKETS_FOLDER_ID = getenv('FOLDER_ANEXOS_TICKETS_ID')
 SERVICE_ACCOUNT_FILE = getenv('SERVICE_ACCOUNT_FILE')
 SCOPES = ['https://www.googleapis.com/auth/drive']
+MAX_RETRIES = 10
+INITIAL_DELAY = 10
 
 credentials = service_account.Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 drive_service = build('drive', 'v3', credentials=credentials)
@@ -113,10 +116,16 @@ def upload_file_gdrive(path_local, name, path_google, folder_type, is_image):
     except Exception as e:
         return {"error": "An error occurred during file upload", "details": str(e)}
 
-def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image):
+def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image, attempt=1, delay=INITIAL_DELAY):
     try:
         with file_lock:
-            gdrive_response = upload_file_gdrive(path_local=file_path, name=new_filename, path_google=gdrive_folder, folder_type=folder_type, is_image=is_image)
+            gdrive_response = upload_file_gdrive(
+                path_local=file_path, 
+                name=new_filename, 
+                path_google=gdrive_folder, 
+                folder_type=folder_type, 
+                is_image=is_image
+            )
 
         if 'id' in gdrive_response:
             print(f"Arquivo inserido no Google Drive: {gdrive_response['id']} - Pasta: {gdrive_response['folder']}")
@@ -126,17 +135,39 @@ def async_upload(file_path, new_filename, gdrive_folder, folder_type, is_image):
             except Exception as e:
                 print(f"Erro ao remover o arquivo local: {file_path}. Detalhes: {e}")
         else:
-            print("Falha ao fazer upload do arquivo para o Google Drive. Detalhes:", gdrive_response.get('error'))
-            subject = "Erro no upload para o Google Drive"
-            recipients = ["corporativo.governacati@korasaude.com.br"]
-            body = f"Ocorreu um erro ao fazer o upload do arquivo {file_path}\nPasta: {gdrive_folder}\nDetalhes: {gdrive_response.get('error')}"
-            send_error_email_with_attachment(subject, recipients, body, file_path)
+            print(f"Falha ao fazer upload do arquivo para o Google Drive na tentativa {attempt}. Detalhes:", gdrive_response.get('error'))
+            
+            if attempt < MAX_RETRIES:
+                attempt += 1
+                
+                print(f"Tentativa {attempt} falhou. Arquivo: {file_path}. Esperando {delay} segundos antes de tentar novamente...")
+                time.sleep(delay)
+                
+                threading.Thread(
+                    target=async_upload, 
+                    args=(file_path, new_filename, gdrive_folder, folder_type, is_image, attempt, delay * 2)
+                ).start()
+            else:
+                subject = "Erro no upload para o Google Drive após várias tentativas"
+                recipients = ["pedro.magalhaes@korasaude.com.br"]
+                body = f"Falha ao fazer o upload do arquivo {file_path} após {MAX_RETRIES} tentativas.\nÚltimo erro: {gdrive_response.get('error')}\nArquivo anexado ao e-mail."
+                send_error_email_with_attachment(subject, recipients, body, file_path)
     except Exception as e:
-        print(f"An error occurred while uploading the file: {e}")
-        subject = "Erro inesperado no upload para o Google Drive"
-        recipients = ["corporativo.governacati@korasaude.com.br"]
-        body = f"Ocorreu um erro inesperado ao fazer o upload do arquivo {file_path}\nPasta: {gdrive_folder}\nDetalhes: {e}"
-        send_error_email_with_attachment(subject, recipients, body, file_path)
+        print(f"An error occurred while uploading the file on attempt {attempt}: {e}")
+        if attempt < MAX_RETRIES:
+            attempt += 1
+            print(f"Tentativa {attempt} falhou devido a erro inesperado. Arquivo: {file_path}. Esperando {delay} segundos antes de tentar novamente...")
+            time.sleep(delay)
+            
+            threading.Thread(
+                target=async_upload, 
+                args=(file_path, new_filename, gdrive_folder, folder_type, is_image, attempt, delay * 2)
+            ).start()
+        else:
+            subject = "Erro inesperado no upload para o Google Drive após várias tentativas"
+            recipients = ["pedro.magalhaes@korasaude.com.br"]
+            body = f"Ocorreu um erro inesperado ao fazer o upload do arquivo {file_path} após {MAX_RETRIES} tentativas.\nÚltimo erro: {e}\nArquivo anexado ao e-mail."
+            send_error_email_with_attachment(subject, recipients, body, file_path)
         
 def send_error_email_with_attachment(subject, recipients, body, attachment_path):
     from app import create_app
