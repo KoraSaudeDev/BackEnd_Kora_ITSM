@@ -12,6 +12,7 @@ from app.controllers.sap_controller import sap_blueprint
 from app.controllers.wf_po_controller import wf_po_blueprint
 from app.controllers.wf_po_form_controller import wf_po_form_blueprint
 from app.controllers.wf_po_update_controller import wf_po_update_blueprint
+from app.controllers.integracao_controller import integracao_blueprint
 
 main_blueprint = Blueprint('main', __name__)
 
@@ -28,3 +29,4 @@ main_blueprint.register_blueprint(sap_blueprint, url_prefix='/sap')
 main_blueprint.register_blueprint(wf_po_blueprint, url_prefix='/wf-po')
 main_blueprint.register_blueprint(wf_po_form_blueprint, url_prefix='/wf-po/form')
 main_blueprint.register_blueprint(wf_po_update_blueprint, url_prefix='/wf-po/update')
+main_blueprint.register_blueprint(integracao_blueprint, url_prefix='/integracao')
