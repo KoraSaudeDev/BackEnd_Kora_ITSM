@@ -1,4 +1,8 @@
-#Informações sensíveis
+# Exceção para os arquivos na pasta nwrfcsdk/lib
+!nwrfcsdk/lib/*.so
+!nwrfcsdk/lib/*.so.50
+
+# Informações sensíveis
 korahelper-account-file.json
 itsmkora-account-file.json
 dev_rfc.log
