@@ -1,6 +1,6 @@
 # Exceção para os arquivos na pasta nwrfcsdk/lib
 !nwrfcsdk/lib/*.so
-!nwrfcsdk/lib/*.so.50
+!nwrfcsdk/lib/*.50
 
 # Informações sensíveis
 korahelper-account-file.json
