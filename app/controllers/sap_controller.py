@@ -68,9 +68,6 @@ def get_material():
 def get_grupo_mercadoria():
     tipo = request.args.get('tipo', '')
     
-    if not tipo:
-        return jsonify({"error": "Parâmetro 'tipo' é obrigatório"}), 400
-    
     connection = ConnectionSAPHANA()
     if not connection:
         return jsonify({"error": "Não foi possível conectar ao SAP HANA"}), 500
@@ -82,6 +79,8 @@ def get_grupo_mercadoria():
             query = """SELECT MATKL FROM SAPHANADB.T023 WHERE BKLAS <> '' AND BKLAS IS NOT NULL AND MATKL NOT LIKE '%SERV%' ORDER BY MATKL ASC"""
         elif tipo == "Serviço":
             query = """SELECT MATKL FROM SAPHANADB.T023 WHERE BKLAS <> '' AND BKLAS IS NOT NULL AND MATKL LIKE '%SERV%' ORDER BY MATKL ASC"""
+        else:
+            query = """SELECT MATKL FROM SAPHANADB.T023 WHERE BKLAS <> '' AND BKLAS IS NOT NULL ORDER BY MATKL ASC"""
         
         cursor.execute(query)
         retorno = cursor.fetchall()

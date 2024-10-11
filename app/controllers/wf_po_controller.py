@@ -10,18 +10,26 @@ from app.utils.auth_utils import token_required
 
 wf_po_blueprint = Blueprint('wf_po', __name__)
 
-@wf_po_blueprint.route('/meus-tickets', methods=['GET'])
+@wf_po_blueprint.route('/meus-tickets', methods=['POST'])
 @token_required
 def get_meus_tickets():
     email = request.args.get('email')
     if not email:
         return jsonify({"error": "Email parameter is required"}), 400
+    
+    filtros_extras = request.get_json() or {}
+    grupo_mercadoria = filtros_extras.get('grupo_mercadoria')
 
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
     try:
-        query = VwWFPO.query.filter(VwWFPO.email == email).order_by(VwWFPO.id.desc())
+        query = VwWFPO.query.filter(VwWFPO.email == email)
+        
+        if grupo_mercadoria:
+            query = query.filter(VwWFPO.grupo_material == grupo_mercadoria)
+            
+        query = query.order_by(VwWFPO.id.desc())
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -53,14 +61,22 @@ def get_meus_tickets():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@wf_po_blueprint.route('/acompanhar', methods=['GET'])
+@wf_po_blueprint.route('/acompanhar', methods=['POST'])
 @token_required
 def get_all():
+    filtros_extras = request.get_json() or {}
+    grupo_mercadoria = filtros_extras.get('grupo_mercadoria')
+    
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
     try:
-        query = VwWFPO.query.order_by(VwWFPO.id.desc())
+        query = VwWFPO.query
+        
+        if grupo_mercadoria:
+            query = query.filter(VwWFPO.grupo_material == grupo_mercadoria)
+            
+        query = query.order_by(VwWFPO.id.desc())
 
         paginated_tickets = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -92,7 +108,7 @@ def get_all():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@wf_po_blueprint.route('/aprovacoes', methods=['GET'])
+@wf_po_blueprint.route('/aprovacoes', methods=['POST'])
 @token_required
 def get_aprovacoes():
     grupos = request.args.get('grupos')
@@ -105,6 +121,9 @@ def get_aprovacoes():
     
     grupo_ids = [int(g.strip()) for g in grupos.split(',')]
     
+    filtros_extras = request.get_json() or {}
+    grupo_mercadoria = filtros_extras.get('grupo_mercadoria')
+    
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
 
@@ -114,6 +133,9 @@ def get_aprovacoes():
         query = query.union(
             VwWFPO.query.filter(VwWFPO.id_executor == 1, VwWFPO.email == email)
         )
+        
+        if grupo_mercadoria:
+            query = query.filter(VwWFPO.grupo_material == grupo_mercadoria)
         
         query = query.order_by(VwWFPO.id.desc())
 
