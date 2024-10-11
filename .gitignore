@@ -1,6 +1,7 @@
 #Informações sensíveis
 korahelper-account-file.json
 itsmkora-account-file.json
+dev_rfc.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
